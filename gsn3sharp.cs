@@ -20,35 +20,62 @@ public class GNS3sharp {
     }
 
     // It returns a dictionary with information about the nodes of the project
-    private static void projectJSON(string projectURL){
+    private static List<Dictionary<string,object>> projectJSON(string projectURL){
 
         // Variable with a string with all the JSON info
         string json;
-        using (System.Net.WebClient GNS3NodesProject = new System.Net.WebClient()){
-            json = GNS3NodesProject.DownloadString(projectURL);
+        try{
+            // Get the info from the JSON file you can access from the GNS3 Rest service
+            using (System.Net.WebClient GNS3NodesProject = new System.Net.WebClient()){
+                json = GNS3NodesProject.DownloadString(projectURL);
+            }
+        } catch(Exception){
+            // Server not open
+            Console.Error.WriteLine("Impossible to connect to project {0}",projectURL);
+            json = null;
         }
 
-        
-        //Console.WriteLine("{0}", json);
+        // Creates a list of dictionaris. It will be used to store the JSON info and
+        // get the values from it
+        List<Dictionary<string,object>> dictList = new List<Dictionary<string,object>>();
+        if(json == "[]"){
+            Console.Error.WriteLine("JSON is empty");
+            dictList = null;
+        } else if (string.IsNullOrEmpty(json) == false){
+            // JSON array object
+            JArray jsonArray = JArray.Parse(json);
+            Dictionary<string,object> tempDict = new Dictionary<string, object>();
 
-        JArray a = JArray.Parse(json);
-        List<Dictionary<string,object>> dict = new List<Dictionary<string, object>>();
-        Dictionary<string,object> ui = new Dictionary<string, object>();
-        foreach (JObject o in a.Children<JObject>())
-        {
-            foreach (JProperty p in o.Properties())
-            {
-                
-                string name = p.Name;
-                object value = (object)p.Value;
-                Console.WriteLine("{0}:{1}",name, value);
-                ui.Add(name,value);
-                if (p.Name == "z") {
-                    dict.Add(ui);
-                    ui.Clear();
+            // Variables in which store the JSON info temporaly
+            string name; object value;
+            
+            foreach (JObject jO in jsonArray.Children<JObject>()) {
+                foreach (JProperty jP in jO.Properties()) {                
+                    name = jP.Name;
+                    value = (object)jP.Value;
+                    tempDict.Add(name,value);
+                    // The last key of every node is 'z'
+                    if (jP.Name == "z") {
+                        // If we do not copy the content of the dictionary into another
+                        // we will be copying by reference and erase the content once
+                        // we 'clear' the dict
+                        Dictionary<string, object> copyDict = new Dictionary<string, object>(tempDict);
+                        dictList.Add(copyDict);
+                        tempDict.Clear();
+                    }
                 }
             }
+            /* // Show content of the list
+            foreach(Dictionary<string, object> dict in dictList){
+                foreach (KeyValuePair<string, object> kvp in dict){
+                    Console.WriteLine("Key = {0}, Value = {1}", kvp.Key, kvp.Value);
+                }
+            }
+            */
+            return dictList;
+        } else{
+            dictList = null;
         }
-            Console.WriteLine("Key = {0}",dict.Count);
+        return dictList;    
     }
 }

@@ -6,7 +6,7 @@ namespace GNS3_UNITY_API
     {
         static void Main(string[] args)
         {
-            GNS3sharp gn = new GNS3sharp("5d72ec22-73e8-448e-9fff-8402b538d72b");
+            GNS3sharp gn = new GNS3sharp("c8b7c345-8e07-4852-99a3-e2238011096e");
         }
     }
 }
