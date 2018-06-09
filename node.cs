@@ -1,22 +1,24 @@
 public class Node{
     // Node attributes
-    private string consoleHost;
-    private int port;
-    private string name;
-    private int type;
+    protected string consoleHost;
+    public string ConsoleHost { get{return name;} }
+    protected ushort port;
+    public ushort Port { get{return port;} }
+    protected string name;
+    public string Name { get{return name;} }
 
-    // Constructor that sets all the parameters for the node
-    public Node(string _consoleHost, int _port, string _name, int _type){
-        consoleHost = _consoleHost;
-        port = _port;
-        name = _name;
-        type = _type;
+    // Constructor by default. It's not intended to be used
+    public Node(){
+        this.consoleHost = null;
+        this.port = 0;
+        this.name = null;
     }
 
-    //////////////////////////// GETs \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-    public string getConsoleHost(){return consoleHost;}
-    public int getPort(){return port;}
-    public string getName(){return name;}
-    public int getType(){return type;}
+    // Constructor that sets all the parameters for the node
+    public Node(string _consoleHost, ushort _port, string _name){
+        this.consoleHost = _consoleHost;
+        this.port = _port;
+        this.name = _name;
+    }
     
 }

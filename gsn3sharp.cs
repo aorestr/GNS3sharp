@@ -21,9 +21,9 @@ public class GNS3sharp {
     }
 
     // Right constructor. Needs the project ID
-    public GNS3sharp(string projectID) {
+    public GNS3sharp(string projectID, ushort GNS3Port = 3080) {
         // Defines the URL in which the nodes info is
-        string projectURL = $"http://localhost:3080/v2/projects/{projectID}/nodes";
+        string projectURL = $"http://localhost:{GNS3Port.ToString()}/v2/projects/{projectID}/nodes";
         // Extract that info
         projectJSON = extractProjectJSON(projectURL);
         if (projectJSON != null){
@@ -33,7 +33,7 @@ public class GNS3sharp {
             // Show every node information
             foreach(Node n in nodes){
                 Console.WriteLine("host: {0}, port: {1}, name: {2}, component: {3}",
-                    n.getConsoleHost(), n.getPort(), n.getName(), n.getType());
+                    n.ConsoleHost, n.Port, n.Name, n.GetType().ToString());
             }
             */
         }
@@ -126,14 +126,30 @@ public class GNS3sharp {
         try{
             foreach(Dictionary<string, object> node in JSON){
                 try{
-                    listOfNodes[i++] = new Node(
-                        node["console_host"].ToString(), 
-                        Int32.Parse(node["console"].ToString()), 
-                        node["name"].ToString(), 
-                        extractComponent(node["symbol"].ToString())
-                    );
+                    switch(extractComponent(node["symbol"].ToString())){
+                        case 1:
+                            listOfNodes[i++] = new VPC(
+                                node["console_host"].ToString(), 
+                                UInt16.Parse(node["console"].ToString()), 
+                                node["name"].ToString()
+                            ); break;
+                        case 2:
+                            listOfNodes[i++] = new Router(
+                                node["console_host"].ToString(), 
+                                UInt16.Parse(node["console"].ToString()), 
+                                node["name"].ToString()
+                            ); break;
+                        case 3:
+                            listOfNodes[i++] = new Switch(
+                                node["console_host"].ToString(), 
+                                UInt16.Parse(node["console"].ToString()), 
+                                node["name"].ToString()
+                            ); break;
+                        default:
+                            listOfNodes[i++] = null; break;
+                    }
                 } catch(Exception){
-                    Console.Error.WriteLine($"Impossible to save the configuration for the node {i}");
+                    Console.Error.WriteLine($"Impossible to save the configuration for the node {i.ToString()}");
                 }
             }
         } catch(Exception){
