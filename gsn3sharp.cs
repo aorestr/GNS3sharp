@@ -20,7 +20,8 @@ public class GNS3sharp {
         Console.Error.WriteLine("You need the project ID");
     }
 
-    // Right constructor. Needs the project ID
+    // Right constructor. Needs the project ID. Just get the nodes
+    // the project has
     public GNS3sharp(string projectID, ushort GNS3Port = 3080) {
         // Defines the URL in which the nodes info is
         string projectURL = $"http://localhost:{GNS3Port.ToString()}/v2/projects/{projectID}/nodes";
@@ -50,9 +51,9 @@ public class GNS3sharp {
             using (System.Net.WebClient GNS3NodesProject = new System.Net.WebClient()){
                 json = GNS3NodesProject.DownloadString(projectURL);
             }
-        } catch(Exception){
+        } catch(Exception err){
             // Server not open
-            Console.Error.WriteLine("Impossible to connect to project {0}",projectURL);
+            Console.Error.WriteLine("Impossible to connect to project {0}: {1}",projectURL, err.Message);
             json = null;
         }
 
@@ -148,12 +149,18 @@ public class GNS3sharp {
                         default:
                             listOfNodes[i++] = null; break;
                     }
-                } catch(Exception){
-                    Console.Error.WriteLine($"Impossible to save the configuration for the node {i.ToString()}");
+                } catch(Exception err1){
+                    Console.Error.WriteLine(
+                        "Impossible to save the configuration for the node {0}: {1}", 
+                        i.ToString(), err1.Message
+                    );
                 }
             }
-        } catch(Exception){
-            Console.Error.WriteLine("Some problem occured while saving the nodes information");
+        } catch(Exception err2){
+            Console.Error.WriteLine(
+                "Some problem occured while saving the nodes information: {0}",
+                err2.Message
+            );
             listOfNodes = null;
         }
 
