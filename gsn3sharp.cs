@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
+using GNS3_UNITY_API;
 
 /*
 It handles the connections with the different components of
@@ -8,12 +9,15 @@ a GNS3 project
  */
 public class GNS3sharp {
 
+    // Project ID
+    private string projectID; public string ProjectID{ get => projectID; }
     // List of nodes inside the project with all the info about them.
     // The info is not filtered
     private List<Dictionary<string,object>> projectJSON;
+    public List<Dictionary<string,object>> ProjectJSON{ get => projectJSON; }
 
     // List of nodes the project has
-    private Node[] nodes;
+    private Node[] nodes; public Node[] Nodes{ get{return nodes;} }
 
     // Wrong constructor. It needs an ID for the project
     public GNS3sharp() {
@@ -22,21 +26,15 @@ public class GNS3sharp {
 
     // Right constructor. Needs the project ID. Just get the nodes
     // the project has
-    public GNS3sharp(string projectID, ushort GNS3Port = 3080) {
+    public GNS3sharp(string _projectID, ushort GNS3Port = 3080) {
+        this.projectID = _projectID;
         // Defines the URL in which the nodes info is
-        string projectURL = $"http://localhost:{GNS3Port.ToString()}/v2/projects/{projectID}/nodes";
+        string projectURL = $"http://localhost:{GNS3Port.ToString()}/v2/projects/{_projectID}/nodes";
         // Extract that info
         projectJSON = extractProjectJSON(projectURL);
         if (projectJSON != null){
             // Create the nodes related to that info
             nodes = getNodes(projectJSON);
-            /*
-            // Show every node information
-            foreach(Node n in nodes){
-                Console.WriteLine("host: {0}, port: {1}, name: {2}, component: {3}",
-                    n.ConsoleHost, n.Port, n.Name, n.GetType().ToString());
-            }
-            */
         }
 
     }
@@ -112,7 +110,7 @@ public class GNS3sharp {
             // Map every component with a number. We need the
             // relation between them for node.cs. This thing must
             // be changed in order to handle more appliances
-            if (symbol.Contains("pc"))
+            if (symbol.Contains("pc") || symbol.Contains("guest"))
                 component = 1;
             else if(symbol.Contains("router"))
                 component = 2;
@@ -132,19 +130,22 @@ public class GNS3sharp {
                             listOfNodes[i++] = new VPC(
                                 node["console_host"].ToString(), 
                                 UInt16.Parse(node["console"].ToString()), 
-                                node["name"].ToString()
+                                node["name"].ToString(),
+                                node["node_id"].ToString()
                             ); break;
                         case 2:
                             listOfNodes[i++] = new Router(
                                 node["console_host"].ToString(), 
                                 UInt16.Parse(node["console"].ToString()), 
-                                node["name"].ToString()
+                                node["name"].ToString(),
+                                node["node_id"].ToString()
                             ); break;
                         case 3:
                             listOfNodes[i++] = new Switch(
                                 node["console_host"].ToString(), 
                                 UInt16.Parse(node["console"].ToString()), 
-                                node["name"].ToString()
+                                node["name"].ToString(),
+                                node["node_id"].ToString()
                             ); break;
                         default:
                             listOfNodes[i++] = null; break;
@@ -166,4 +167,5 @@ public class GNS3sharp {
 
         return listOfNodes;
     }
+
 }
