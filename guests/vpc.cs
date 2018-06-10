@@ -3,6 +3,8 @@ using GNS3_UNITY_API;
 
 public class VPC : Guest{
 
+    public VPC(Guest father) : base(father){}
+
     // Show current config
     public (string[] in_txt, int numBytes) ShowConf(){
         // Reception varible as a string
