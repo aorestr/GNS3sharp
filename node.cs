@@ -55,19 +55,21 @@ public class Node{
             numBytesSent = this.socket.Send(buffer: out_txt);
         } catch(ObjectDisposedException err1){
             Console.Error.WriteLine("Impossible to send anything, socket closed: {0}", err1.Message);
-        } catch(Exception err2){
+        } catch(NullReferenceException){
+            Console.Error.WriteLine("Socket value is null. Probably it was not possible to initialize it");
+        }  catch(Exception err3){
             Console.Error.WriteLine(
                 "Some error occured while sending '{0}': {1}",
-                message, err2.Message
+                message, err3.Message
             );
         }
         return numBytesSent;
     }
 
     // Get the info from the buffer terminal of a node
-    public (string in_txt, int numBytes) Receive(){
+    public (string[] in_txt, int numBytes) Receive(){
         // Reception varible as a string
-        string in_txt = null;
+        string[] in_txt = null;
         // Reception varible as a bytes array
         byte[] in_bytes = new byte[255];
         // Number of bytes received
@@ -75,9 +77,9 @@ public class Node{
 
         try{
             numBytes = this.socket.Receive(in_bytes, in_bytes.Length, 0);
-            in_txt = Encoding.UTF8.GetString(in_bytes);
+            in_txt = Encoding.UTF8.GetString(in_bytes).Split("\n");
         } catch(NullReferenceException){
-            Console.Error.WriteLine("Socket value is null. Probably it was not possible to initiaze it");
+            Console.Error.WriteLine("Socket value is null. Probably it was not possible to initialize it");
         } catch(Exception err2){
             Console.Error.WriteLine("Some error occured while receiving text: {0}", err2.Message);
         } 

@@ -20,9 +20,7 @@ public class GNS3sharp {
     private Node[] nodes; public Node[] Nodes{ get{return nodes;} }
 
     // Wrong constructor. It needs an ID for the project
-    public GNS3sharp() {
-        Console.Error.WriteLine("You need the project ID");
-    }
+    public GNS3sharp() => Console.Error.WriteLine("You need the project ID");
 
     // Right constructor. Needs the project ID. Just get the nodes
     // the project has
@@ -127,7 +125,7 @@ public class GNS3sharp {
                 try{
                     switch(extractComponent(node["symbol"].ToString())){
                         case 1:
-                            listOfNodes[i++] = new VPC(
+                            listOfNodes[i++] = new Guest(
                                 node["console_host"].ToString(), 
                                 UInt16.Parse(node["console"].ToString()), 
                                 node["name"].ToString(),
