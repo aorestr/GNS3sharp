@@ -8,11 +8,9 @@ public class Guest : Node{
 
     // In case we want to clone the instance
     protected Guest(Guest clone){
-        this.consoleHost = clone.ConsoleHost;
-        this.port = clone.Port;
-        this.name = clone.Name;
-        this.id = clone.ID;
-        this.socket = clone.Socket;
+        this.consoleHost = clone.ConsoleHost; this.port = clone.Port;
+        this.name = clone.Name; this.id = clone.ID;
+        this.tcpConnection = clone.TCPConnection; this.netStream = clone.NetStream;
     }
 
 }
