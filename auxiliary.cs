@@ -1,5 +1,6 @@
 using GNS3_UNITY_API;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text.RegularExpressions;
@@ -57,4 +58,28 @@ public static class Aux{
     // Guess whether a string is a netmask or not
     public static bool IsNetmask(string netmask) =>
         Regex.IsMatch(netmask, @"^(((255\.){3}(255|254|252|248|240|224|192|128|0+))|((255\.){2}(255|254|252|248|240|224|192|128|0+)\.0)|((255\.)(255|254|252|248|240|224|192|128|0+)(\.0+){2})|((255|254|252|248|240|224|192|128|0+)(\.0+){3}))$");
+    
+    // Convert a mask written my numbers into its CIDR notation
+    public static Int16 NetmaskCIDR(string netmaskDecimals){
+        Int16 result = 0;
+
+        if (Aux.IsNetmask(netmaskDecimals)){
+            // Split the mask by its dots
+            string[] netmaskSplit = netmaskDecimals.Split(".");
+            BitArray bits;
+            foreach (string numberStr in netmaskSplit){
+                // Turn every number into a bit array
+                bits = new BitArray(BitConverter.GetBytes(UInt16.Parse(numberStr)));
+                foreach (bool bit in bits){
+                    // Run over the array and add 1 to the value for every true found
+                    if (bit == true)
+                        result += 1;
+                }
+            }
+        } else{
+            result = -1;
+        }
+
+        return result;
+    }
 }

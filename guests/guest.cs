@@ -9,5 +9,5 @@ public abstract class Guest : Node{
     public Guest(Node clone) : base(clone){}
 
     // Methods every guest subclass must have
-    abstract public string[] SetIP(string IP, string netmask, int adapter_number);
+    abstract public string[] SetIP(string IP, string netmask, int adapter_number, string gateway);
 }

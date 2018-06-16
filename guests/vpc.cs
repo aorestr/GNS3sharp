@@ -74,15 +74,27 @@ public class VPC : Guest{
     }
 
     // Set an IP for the VPC
-    public override string[] SetIP(string IP, string netmask = null, int adapter_number = 0){
+    public override string[] SetIP(
+        string IP, string netmask = "255.255.255.0", int adapter_number = 0, string gateway = null
+        ){
 
         // Reception varible as a string
         string[] in_txt = null;
+        // Netmask in CIDR notation
+        Int16 netmaskInt = Aux.NetmaskCIDR(netmask);
 
-        if(Aux.IsIP(IP)) {
-            Send($"ip {IP}");
+        if (netmaskInt == -1){
+            Console.Error.WriteLine($"{netmask} is not a valid netmask");
+        } else if(Aux.IsIP(IP) && gateway == null) {
+            Send($"ip {IP}/{netmaskInt}");
             in_txt = Receive();
-        } else{
+        } else if (Aux.IsIP(IP) && gateway != null) {
+            if (Aux.IsIP(gateway)){
+                Send($"ip {IP}/{netmaskInt} {gateway}");
+            } else{
+                Console.Error.WriteLine($"{gateway} is not a valid gateway");
+            }
+        } else {
             Console.Error.WriteLine($"{IP} is not a valid IP");
         }
         // Return the response

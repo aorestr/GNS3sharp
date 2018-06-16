@@ -13,7 +13,9 @@ public class MicroCore : Guest{
     public MicroCore(Node father) : base(father){}
 
     // Set an IP for the MicroCore
-    public override string[] SetIP(string IP, string netmask = "255.255.255.0", int adapter_number = 0){
+    public override string[] SetIP(
+        string IP, string netmask = "255.255.255.0", int adapter_number = 0, string gateway = null
+        ){
 
         // Reception varible as a string
         string[] in_txt = null;
@@ -23,8 +25,18 @@ public class MicroCore : Guest{
         } else if(!Aux.IsNetmask(netmask)){ 
             Console.Error.WriteLine($"{netmask} is not a valid netmask");
         } else{
-            Send($"sudo ifconfig eth{adapter_number.ToString()} {IP} netmask {netmask}");
-            in_txt = Receive();
+            if (gateway != null && !Aux.IsIP(gateway)) {
+                // If we want to set a gateway but it is not correct
+                Console.Error.WriteLine($"{netmask} is not a valid netmask");
+            } else{
+                Send($"sudo ifconfig eth{adapter_number.ToString()} {IP} netmask {netmask}");
+                in_txt = Receive();
+                if (gateway != null) {
+                    // If we choose to set a gateway
+                    Send($"sudo route add default gw {gateway}");
+                    Receive().CopyTo(in_txt, in_txt.Length);
+                }
+            }
         }
         // Return the response
         return in_txt;
