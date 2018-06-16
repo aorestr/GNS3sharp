@@ -107,7 +107,7 @@ public class GNS3sharp {
             foreach(Dictionary<string, object> node in JSON){
                 try{
                     // Assign a class or another depending on the node
-                    classType = Aux.NewNode(node["name"].ToString());
+                    classType = Aux.NodeType(node["name"].ToString());
                     listOfNodes[i++] = (Node)Activator.CreateInstance(
                         classType,
                         node["console_host"].ToString(), 

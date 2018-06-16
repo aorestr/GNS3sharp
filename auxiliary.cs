@@ -5,7 +5,7 @@ using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 
 /*
-Defines some methods that could be helpful for other classes
+Defines some methods that are helpful for other classes
  */
 public static class Aux{
 
@@ -31,7 +31,7 @@ public static class Aux{
     );
 
     // It returns the right class type for every node
-    public static Type NewNode(string nodeName){
+    public static Type NodeType(string nodeName){
 
         // If something goes wrong and the label is not properly set on the
         // name, it returns the generic Node class
@@ -53,4 +53,8 @@ public static class Aux{
     // Guess whether a string is an IP or not
     public static bool IsIP(string IP) => 
         Regex.IsMatch(IP, @"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$");
+
+    // Guess whether a string is a netmask or not
+    public static bool IsNetmask(string netmask) =>
+        Regex.IsMatch(netmask, @"^(((255\.){3}(255|254|252|248|240|224|192|128|0+))|((255\.){2}(255|254|252|248|240|224|192|128|0+)\.0)|((255\.)(255|254|252|248|240|224|192|128|0+)(\.0+){2})|((255|254|252|248|240|224|192|128|0+)(\.0+){3}))$");
 }
