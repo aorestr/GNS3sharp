@@ -3,7 +3,13 @@ using GNS3_UNITY_API;
 
 public class VPC : Guest{
 
-    public VPC(Guest father) : base(father){}
+    // In the name of the node: [label]Name
+    public const string label = "VPC";
+
+    public VPC() : base() {}
+    public VPC(string _consoleHost, ushort _port, string _name, string _id) : 
+        base(_consoleHost, _port, _name, _id){}
+    public VPC(Node father) : base(father){}
 
     // Show current config
     public string[] ShowConf(){

@@ -14,7 +14,6 @@ public class Node{
     protected string id; public string ID { get => id; }
     protected TcpClient tcpConnection; public TcpClient TCPConnection { get => tcpConnection; }
     protected NetworkStream netStream; public NetworkStream NetStream { get => netStream; }
-    
 
     // Constructor by default. It's not intended to be used
     public Node(){
@@ -26,6 +25,13 @@ public class Node{
     public Node(string _consoleHost, ushort _port, string _name, string _id){
         this.consoleHost = _consoleHost; this.port = _port; this.name = _name; this.id = _id;
         (this.tcpConnection, this.netStream) = this.Connect();
+    }
+
+    // In case we want to clone the instance
+    protected Node(Node clone){
+        this.consoleHost = clone.ConsoleHost; this.port = clone.Port;
+        this.name = clone.Name; this.id = clone.ID;
+        this.tcpConnection = clone.TCPConnection; this.netStream = clone.NetStream;
     }
 
     // Close the connection with the server before leaving
@@ -106,12 +112,8 @@ public class Node{
                 // We need to wait for the server to process our messages
                 Thread.Sleep(2000);
             } while (this.netStream.DataAvailable);
-            // Split the text we have received in \n
-            in_txt_split = in_txt.Split("\n");
-            // Remove all the unnecesary characters contained in the buffer
-            for(int i = 0; i < in_txt_split.Length; ++i){
-                in_txt_split[i] = Regex.Replace(in_txt_split[i], @"(\0){2,}", ""); 
-            }
+            // Remove all the unnecesary characters contained in the buffer and split the text we have received in \n
+            in_txt_split = Regex.Replace(in_txt, @"(\0){2,}", "").Split("\n");
         }
         return in_txt_split;
     }

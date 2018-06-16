@@ -5,7 +5,7 @@ namespace GNS3_UNITY_API {
     class Program {
         static void Main(string[] args) {
             GNS3sharp handler = new GNS3sharp("b4a4f44d-0f62-4435-89e0-84c8c7a2b35f");
-            // Example1(handler);
+            Example1(handler);
             Example2(handler);
         }
        
@@ -20,7 +20,7 @@ namespace GNS3_UNITY_API {
         public static void Example2(GNS3sharp handler){
             string[] in_txt = null;
             try{
-                VPC PC = new VPC(handler.Nodes.Where(node => node.Name == "PC_Lleida").ToList()[0] as Guest);
+                VPC PC = (VPC)handler.Nodes.Where(node => node.Name == "[VPC]PC_Lleida").ToList()[0];
                 in_txt = PC.ShowConf();
                 foreach(string lin in in_txt){
                     Console.WriteLine($"{lin}");

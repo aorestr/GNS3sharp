@@ -102,52 +102,19 @@ public class GNS3sharp {
     private static Node[] getNodes(List<Dictionary<string,object>> JSON){
         Node[] listOfNodes = new Node[JSON.Count];
 
-        // Guess what kind of component is the node by its symbol name
-        int extractComponent(string symbol){
-            int component;
-            // Map every component with a number. We need the
-            // relation between them for node.cs. This thing must
-            // be changed in order to handle more appliances
-            if (symbol.Contains("pc") || symbol.Contains("guest"))
-                component = 1;
-            else if(symbol.Contains("router"))
-                component = 2;
-            else if(symbol.Contains("switch"))
-                component = 3;
-            else
-                component = 0;
-            return component;
-        }
-
-        int i = 0;
+        Type classType; int i = 0;
         try{
             foreach(Dictionary<string, object> node in JSON){
                 try{
-                    switch(extractComponent(node["symbol"].ToString())){
-                        case 1:
-                            listOfNodes[i++] = new Guest(
-                                node["console_host"].ToString(), 
-                                UInt16.Parse(node["console"].ToString()), 
-                                node["name"].ToString(),
-                                node["node_id"].ToString()
-                            ); break;
-                        case 2:
-                            listOfNodes[i++] = new Router(
-                                node["console_host"].ToString(), 
-                                UInt16.Parse(node["console"].ToString()), 
-                                node["name"].ToString(),
-                                node["node_id"].ToString()
-                            ); break;
-                        case 3:
-                            listOfNodes[i++] = new Switch(
-                                node["console_host"].ToString(), 
-                                UInt16.Parse(node["console"].ToString()), 
-                                node["name"].ToString(),
-                                node["node_id"].ToString()
-                            ); break;
-                        default:
-                            listOfNodes[i++] = null; break;
-                    }
+                    // Assign a class or another depending on the node
+                    classType = Aux.NewNode(node["name"].ToString());
+                    listOfNodes[i++] = (Node)Activator.CreateInstance(
+                        classType,
+                        node["console_host"].ToString(), 
+                        UInt16.Parse(node["console"].ToString()), 
+                        node["name"].ToString(),
+                        node["node_id"].ToString()
+                    );
                 } catch(Exception err1){
                     Console.Error.WriteLine(
                         "Impossible to save the configuration for the node {0}: {1}", 
