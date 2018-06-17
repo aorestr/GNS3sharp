@@ -17,7 +17,7 @@ public class MicroCore : Guest{
         string IP, string netmask = "255.255.255.0", int adapter_number = 0, string gateway = null
         ){
 
-        // Reception varible as a string
+        // Reception variable as a string
         string[] in_txt = null;
 
         if(!Aux.IsIP(IP)) {
@@ -25,18 +25,28 @@ public class MicroCore : Guest{
         } else if(!Aux.IsNetmask(netmask)){ 
             Console.Error.WriteLine($"{netmask} is not a valid netmask");
         } else{
-            if (gateway != null && !Aux.IsIP(gateway)) {
-                // If we want to set a gateway but it is not correct
-                Console.Error.WriteLine($"{netmask} is not a valid netmask");
-            } else{
-                Send($"sudo ifconfig eth{adapter_number.ToString()} {IP} netmask {netmask}");
-                in_txt = Receive();
-                if (gateway != null) {
-                    // If we choose to set a gateway
-                    Send($"sudo route add default gw {gateway}");
-                    Receive().CopyTo(in_txt, in_txt.Length);
-                }
+            Send($"sudo ifconfig eth{adapter_number.ToString()} {IP} netmask {netmask}");
+            in_txt = Receive();
+            if (gateway != null) {
+                // If we choose to set a gateway
+                SetGateway(gateway).CopyTo(in_txt, in_txt.Length);
             }
+        }
+        // Return the response
+        return in_txt;
+
+    }
+
+    // Set a gateway
+    public string[] SetGateway(string gateway){
+        // Reception variable as a string
+        string[] in_txt = null;
+
+        if (Aux.IsIP(gateway)) {
+            Send($"sudo route add default gw {gateway}");
+            in_txt = Receive();
+        } else{
+            Console.Error.WriteLine($"{gateway} is not a valid gateway");
         }
         // Return the response
         return in_txt;
