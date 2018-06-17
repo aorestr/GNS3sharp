@@ -58,7 +58,7 @@ public class Node{
             newConnection.Connect(address);
             newStream = newConnection.GetStream();
         } catch(Exception err){
-            Console.Error.WriteLine("Impossible to connect to the node: {0}", err.Message);
+            Console.Error.WriteLine("Impossible to connect to the node {0}: {1}", this.name, err.Message);
             newConnection = null;
         }
         return (newConnection, newStream);
@@ -67,7 +67,9 @@ public class Node{
     // Send a message we choose as a parameter to the node
     public void Send(string message){
 
-        if (this.netStream.CanWrite){
+        if (this.tcpConnection == null)
+            (this.tcpConnection, this.netStream) = this.Connect();
+        if (this.tcpConnection != null && this.netStream.CanWrite){
             try{
                 // We need to convert the string into a bytes array first
                 byte[] out_txt = Encoding.Default.GetBytes($"{message}\n");
@@ -94,6 +96,9 @@ public class Node{
 
         // Reception variable as a string split by \n
         string[] in_txt_split = null;
+
+        if (this.tcpConnection != null)
+            (this.tcpConnection, this.netStream) = this.Connect();
         if (this.netStream.CanRead){
             // Reception variable as a bytes array
             byte[] in_bytes = new byte[tcpConnection.ReceiveBufferSize];

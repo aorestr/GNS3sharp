@@ -9,8 +9,6 @@ This work was born as a need for my end-of-studies project. Since its purpose is
 Firstly, you will need [Json.NET](https://www.newtonsoft.com/json) in your system. It's an open-source framework headed to help .NET with JSON.
 
 ## First steps ##
-// Run y stop GNS3
-
 Once the library is imported into your project and you have **GNS3** running, you can create a new instance of the handler class. The constructor needs at least the ID of the project you want to handle. You can also add the server and port your **GNS3** uses as a server. By default *``host`` = "localhost"* and *``port`` = 3080*:
 
 ```csharp
@@ -26,6 +24,12 @@ foreach(Node n in handler.Nodes){
 		n.ConsoleHost, n.Port, n.Name, n.GetType().ToString()
 	);
 }
+```
+
+You can also run/stop your project by using the handler:
+
+```csharp
+handler.StartProject();
 ```
 
 ## Nodes ##

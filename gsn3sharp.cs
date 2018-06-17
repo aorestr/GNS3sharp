@@ -1,5 +1,8 @@
 using System;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using GNS3_UNITY_API;
 
@@ -11,6 +14,13 @@ public class GNS3sharp {
 
     // Project ID
     private string projectID; public string ProjectID{ get => projectID; }
+
+    // GNS3 server host
+    private string host; public string Host{ get => host; }
+
+    // GNS3 server port
+    private ushort port; public ushort Port{ get => port; }
+
     // List of nodes inside the project with all the info about them.
     // The info is not filtered
     private List<Dictionary<string,object>> projectJSON;
@@ -19,15 +29,18 @@ public class GNS3sharp {
     // List of nodes the project has
     private Node[] nodes; public Node[] Nodes{ get{return nodes;} }
 
+    // HTTP client used to make POST in order to start or stop the nodes
+    private static readonly HttpClient HTTPclient = new HttpClient();
+
     // Wrong constructor. It needs an ID for the project
     public GNS3sharp() => Console.Error.WriteLine("You need the project ID");
 
     // Right constructor. Needs the project ID. Just get the nodes
     // the project has
-    public GNS3sharp(string _projectID, string host = "localhost", ushort GNS3Port = 3080) {
-        this.projectID = _projectID;
+    public GNS3sharp(string _projectID, string _host = "localhost", ushort _port = 3080) {
+        this.projectID = _projectID; this.host = _host; this.port = _port;
         // Defines the URL in which the nodes info is
-        string projectURL = $"http://{host}:{GNS3Port.ToString()}/v2/projects/{_projectID}/nodes";
+        string projectURL = $"http://{_host}:{_port.ToString()}/v2/projects/{_projectID}/nodes";
         // Extract that info
         projectJSON = extractProjectJSON(projectURL);
         if (projectJSON != null){
@@ -132,5 +145,51 @@ public class GNS3sharp {
 
         return listOfNodes;
     }
+
+    // Initialize all the nodes in the project
+    public string[] StartProject(){
+        return ChangeProjectStatus("start");
+    }
+
+    // Stop all the nodes in the project
+    public string[] StopProject(){
+        return ChangeProjectStatus("stop");
+    }
+
+    // Change the status of the project (start or stop)
+    private string[] ChangeProjectStatus(string status){
+        
+        // First part of the URL
+        string URLHeader = $"http://{host}:{port}/v2/projects/{projectID}/nodes";
+
+        // String with all the messages received
+        int numNodes = nodes.Length;
+        string[] totalMessages = new string[numNodes];
+
+        // Pack the content we will send
+        string content = JsonConvert.SerializeObject(new Dictionary<string, string> { { "-d", "{}" } });
+        ByteArrayContent byteContent = new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(content));
+        byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+        if (status.Equals("start"))
+            Console.WriteLine("Activating all the nodes in the project...");
+        else
+            Console.WriteLine("Deactivating all the nodes in the project...");
+        for (ushort i = 0; i < numNodes; i++){
+            try{
+                var res = HTTPclient.PostAsync(
+                    $"{URLHeader}/{nodes[i].ID}/{status}", byteContent
+                ).Result.Content.ReadAsStringAsync();
+                totalMessages[i] = res.Result.ToString();
+            } catch(Exception err){
+                Console.Error.WriteLine("Impossible to {2} node {0}: {1}", nodes[i].Name, err.Message, status);
+            }
+        }
+        Console.WriteLine("...ok");
+
+        // If everything goes right, it returns info about every node
+        return totalMessages;
+    }
+
 
 }
