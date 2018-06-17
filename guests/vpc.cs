@@ -81,7 +81,7 @@ public class VPC : Guest{
         // Reception varible as a string
         string[] in_txt = null;
         // Netmask in CIDR notation
-        Int16 netmaskInt = Aux.NetmaskCIDR(netmask);
+        short netmaskInt = Aux.NetmaskCIDR(netmask);
 
         if (netmaskInt == -1){
             Console.Error.WriteLine($"{netmask} is not a valid netmask");

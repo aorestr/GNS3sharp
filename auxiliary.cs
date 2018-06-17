@@ -59,9 +59,9 @@ public static class Aux{
     public static bool IsNetmask(string netmask) =>
         Regex.IsMatch(netmask, @"^(((255\.){3}(255|254|252|248|240|224|192|128|0+))|((255\.){2}(255|254|252|248|240|224|192|128|0+)\.0)|((255\.)(255|254|252|248|240|224|192|128|0+)(\.0+){2})|((255|254|252|248|240|224|192|128|0+)(\.0+){3}))$");
     
-    // Convert a mask written my numbers into its CIDR notation
-    public static Int16 NetmaskCIDR(string netmaskDecimals){
-        Int16 result = 0;
+    // Convert a mask written by numbers and dots into its CIDR notation
+    public static short NetmaskCIDR(string netmaskDecimals){
+        short result = 0;
 
         if (Aux.IsNetmask(netmaskDecimals)){
             // Split the mask by its dots
@@ -69,11 +69,10 @@ public static class Aux{
             BitArray bits;
             foreach (string numberStr in netmaskSplit){
                 // Turn every number into a bit array
-                bits = new BitArray(BitConverter.GetBytes(UInt16.Parse(numberStr)));
+                bits = new BitArray(BitConverter.GetBytes(ushort.Parse(numberStr)));
                 foreach (bool bit in bits){
                     // Run over the array and add 1 to the value for every true found
-                    if (bit == true)
-                        result += 1;
+                    if (bit == true) result++;
                 }
             }
         } else{

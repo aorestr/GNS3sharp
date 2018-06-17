@@ -24,10 +24,10 @@ public class GNS3sharp {
 
     // Right constructor. Needs the project ID. Just get the nodes
     // the project has
-    public GNS3sharp(string _projectID, ushort GNS3Port = 3080) {
+    public GNS3sharp(string _projectID, string host = "localhost", ushort GNS3Port = 3080) {
         this.projectID = _projectID;
         // Defines the URL in which the nodes info is
-        string projectURL = $"http://localhost:{GNS3Port.ToString()}/v2/projects/{_projectID}/nodes";
+        string projectURL = $"http://{host}:{GNS3Port.ToString()}/v2/projects/{_projectID}/nodes";
         // Extract that info
         projectJSON = extractProjectJSON(projectURL);
         if (projectJSON != null){
@@ -111,7 +111,7 @@ public class GNS3sharp {
                     listOfNodes[i++] = (Node)Activator.CreateInstance(
                         classType,
                         node["console_host"].ToString(), 
-                        UInt16.Parse(node["console"].ToString()), 
+                        ushort.Parse(node["console"].ToString()), 
                         node["name"].ToString(),
                         node["node_id"].ToString()
                     );
