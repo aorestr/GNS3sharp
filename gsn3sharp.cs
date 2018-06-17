@@ -191,5 +191,19 @@ public class GNS3sharp {
         return totalMessages;
     }
 
+    // Find the element that corresponds to a certain name.
+    // A casting is compulsory in order to use the Node submethods
+    public Node getNodeByName(string name){
+        Node foundNode = null;
+
+        foreach(Node n in nodes){
+            if (n.Name.Equals(name)){
+                foundNode = n;
+                break;
+            }
+        }
+
+        return foundNode;
+    }
 
 }

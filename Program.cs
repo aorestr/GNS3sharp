@@ -27,7 +27,7 @@ namespace GNS3_UNITY_API {
         public static void Example2(GNS3sharp handler){
             string[] in_txt = null;
             try{
-                VPC PC = (VPC)handler.Nodes.Where(node => node.Name == "[VPC]PC_Lleida").ToList()[0];
+                VPC PC = (VPC)handler.getNodeByName("[VPC]PC_Lleida");
                 in_txt = PC.ShowConf();
                 foreach(string lin in in_txt){
                     Console.WriteLine($"{lin}");

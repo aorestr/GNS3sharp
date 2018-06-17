@@ -38,8 +38,12 @@ Every node is related to a class which will handle it with the functions you exp
 Every type of node has methods that let you interact with it in a very easy way. For example, once again, if we are dealing with a *VPC* node we can set its IP just like:
 
 ```csharp
+VPC PC = (VPC)handler.getNodeByName("[VPC]PC_Lleida");
+// dynamic PC = handler.getNodeByName("[VPC]PC_Lleida");
 OurVPC.SetIP("192.168.10.11");
 ```
+
+Sadly you will need to cast to the type of node you will deal with if you want to use its especific methods. It's possible to use the ``dynamic`` type but it will break on functions with several returns.
 
 We also can select the netmask ("255.255.255.0" by default) and the gateway.
 
