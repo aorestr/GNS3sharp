@@ -33,13 +33,13 @@ handler.StartProject();
 ```
 
 ## Nodes ##
-Every node is related to a class which will handle it with the functions you expect this device to have. In order to make this work, the name of your node in your **GNS3** project must start by *[NODETYPE]*. For example, if you plan to have a *VPC* called "My_PC", you must make sure the component is called "[VPC]My_PC" in the project. Every type of node has its own name you can find in the static property called ``label``. For instance, **OpenVSwitch** switches has "OVS" as label and **OpenWRT** routers "OPENWRT".
+Every node is related to a class which will handle it with the functions you expect this device to have. In order to make this work, the name of your node in your **GNS3** project must start with *[NODETYPE]*. For example, if you plan to have a *VPC* called "My_PC", you must make sure the component is called "[VPC]My_PC" in the project. Every type of node has its own name you can find in the static property called ``label``. For instance, **OpenVSwitch** switches has "OVS" as label and **OpenWRT** routers "OPENWRT".
 
 Every type of node has methods that let you interact with it in a very easy way. For example, once again, if we are dealing with a *VPC* node we can set its IP just like:
 
 ```csharp
-VPC PC = (VPC)handler.getNodeByName("[VPC]PC_Lleida");
-// dynamic PC = handler.getNodeByName("[VPC]PC_Lleida");
+VPC OurVPC = (VPC)handler.getNodeByName("[VPC]PC_Lleida");
+// dynamic OurVPC = handler.getNodeByName("[VPC]PC_Lleida");
 OurVPC.SetIP("192.168.10.11");
 ```
 

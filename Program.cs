@@ -6,11 +6,9 @@ using System.Threading;
 namespace GNS3_UNITY_API {
     class Program {
         static void Main(string[] args) {
-            GNS3sharp handler = new GNS3sharp("b4a4f44d-0f62-4435-89e0-84c8c7a2b35f");
-            Example1(handler);
-            handler.StartProject();
-            Example2(handler);
-            handler.StopProject();
+            //GNS3sharp handler = new GNS3sharp("b4a4f44d-0f62-4435-89e0-84c8c7a2b35f");
+            //Example1(handler);
+            //Example2(handler);
             //Example3(handler);
 
         }
@@ -47,6 +45,7 @@ namespace GNS3_UNITY_API {
             } 
         }
 
+        // Set an IP to a Microcore
         public static void Example3(GNS3sharp handler){
             string[] in_txt = null;
             try{
@@ -59,5 +58,11 @@ namespace GNS3_UNITY_API {
                 Console.Error.WriteLine("Some error occured: {0}", err.Message);
             } 
         }
+
+        // Example https://www.youtube.com/watch?v=rMrPJlKXsJ8
+        public static void Example4(){
+            
+        }
+
     }
 }

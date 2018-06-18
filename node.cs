@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 using GNS3_UNITY_API;
@@ -47,7 +48,7 @@ public class Node{
     }
 
     // Stablish a TCP connection with the node
-    protected (TcpClient Connection, NetworkStream Stream) Connect(){
+    protected (TcpClient Connection, NetworkStream Stream) Connect(int timeout = 10000){
         // Network endpoint as an IP address and a port number
         IPEndPoint address = new IPEndPoint(IPAddress.Parse(this.consoleHost),this.port);
         // Set the socket for the connection
@@ -57,6 +58,7 @@ public class Node{
         try{
             newConnection.Connect(address);
             newStream = newConnection.GetStream();
+            newStream.ReadTimeout = timeout; newStream.WriteTimeout = timeout;
         } catch(Exception err){
             Console.Error.WriteLine("Impossible to connect to the node {0}: {1}", this.name, err.Message);
             newConnection = null;
@@ -79,7 +81,9 @@ public class Node{
                 Console.Error.WriteLine("Impossible to send anything, connection closed: {0}", err1.Message);
             } catch(NullReferenceException){
                 Console.Error.WriteLine("Connection value is null. Probably it was not possible to initialize it");
-            }  catch(Exception err3){
+            } catch(IOException err2){
+                Console.Error.WriteLine("Time to write expired: {0}", err2.Message);
+            } catch(Exception err3){
                 Console.Error.WriteLine(
                     "Some error occured while sending '{0}': {1}",
                     message, err3.Message
@@ -111,6 +115,8 @@ public class Node{
                     in_txt = $"{in_txt}{Encoding.Default.GetString(in_bytes)}";
                 } catch(NullReferenceException){
                     Console.Error.WriteLine("Connection is null. Probably it was not possible to initialize it");
+                } catch(IOException err1){
+                    Console.Error.WriteLine("Time to write expired: {0}", err1.Message);
                 } catch(Exception err2){
                     Console.Error.WriteLine("Some error occured while receiving text: {0}", err2.Message);
                 }
