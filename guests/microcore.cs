@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using GNS3_UNITY_API;
 
 public class MicroCore : Guest{
@@ -14,7 +15,7 @@ public class MicroCore : Guest{
 
     // Set an IP for the MicroCore
     public override string[] SetIP(
-        string IP, string netmask = "255.255.255.0", int adapter_number = 0, string gateway = null
+        string IP, string netmask = "255.255.255.0", ushort interfaceNumber = 0, string gateway = null
         ){
 
         // Reception variable as a string
@@ -25,11 +26,11 @@ public class MicroCore : Guest{
         } else if(!Aux.IsNetmask(netmask)){ 
             Console.Error.WriteLine($"{netmask} is not a valid netmask");
         } else{
-            Send($"sudo ifconfig eth{adapter_number.ToString()} {IP} netmask {netmask}");
+            Send($"sudo ifconfig eth{interfaceNumber.ToString()} {IP} netmask {netmask}");
             in_txt = Receive();
             if (gateway != null) {
                 // If we choose to set a gateway
-                SetGateway(gateway).CopyTo(in_txt, in_txt.Length);
+                in_txt = in_txt.Concat(SetGateway(gateway)).ToArray();
             }
         }
         // Return the response

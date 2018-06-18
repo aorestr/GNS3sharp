@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-
 using System.Threading;
 
 namespace GNS3_UNITY_API {
@@ -10,7 +9,7 @@ namespace GNS3_UNITY_API {
             //Example1(handler);
             //Example2(handler);
             //Example3(handler);
-
+            Example4();
         }
        
         // Show every node information
@@ -61,7 +60,32 @@ namespace GNS3_UNITY_API {
 
         // Example https://www.youtube.com/watch?v=rMrPJlKXsJ8
         public static void Example4(){
-            
+            GNS3sharp handler = new GNS3sharp("61261064-a2a4-4666-8f26-d2dbfbbe26a4");
+            MicroCore PC1 = (MicroCore)handler.getNodeByName("[MICROCORE]PC_Lleida");
+            MicroCore PC2 = (MicroCore)handler.getNodeByName("[MICROCORE]PC_Mollerusa");
+            MicroCore PC3 = (MicroCore)handler.getNodeByName("[MICROCORE]PC_Balaguer");
+            OpenWRT Router1 = (OpenWRT)handler.getNodeByName("[OPENWRT]Lleida");
+            OpenWRT Router2 = (OpenWRT)handler.getNodeByName("[OPENWRT]Mollerusa");
+            OpenWRT Router3 = (OpenWRT)handler.getNodeByName("[OPENWRT]Balaguer");
+            PC1.SetIP(IP:"192.168.10.11",gateway:"192.168.10.1");
+            PC2.SetIP(IP:"192.168.20.11",gateway:"192.168.20.1");
+            PC3.SetIP(IP:"192.168.30.11",gateway:"192.168.30.1");
+            Router1.ActivateInterface(IP:"192.168.10.1",interfaceNumber:0);
+            Router1.ActivateInterface(IP:"200.10.10.1",interfaceNumber:1);
+            Router2.ActivateInterface(IP:"192.168.20.1",interfaceNumber:0);
+            Router2.ActivateInterface(IP:"200.10.10.2",interfaceNumber:2);
+            Router2.ActivateInterface(IP:"200.20.20.1",interfaceNumber:1);
+            Router3.ActivateInterface(IP:"192.168.30.1",interfaceNumber:0);
+            Router3.ActivateInterface(IP:"200.20.20.2",interfaceNumber:2);
+            Router1.SetRoute(destination:"192.168.20.0",gateway:"200.10.10.2");
+            Router1.SetRoute(destination:"192.168.30.0",gateway:"200.10.10.2");
+            Router2.SetRoute(destination:"192.168.10.0",gateway:"200.10.10.1");
+            Router2.SetRoute(destination:"192.168.30.0",gateway:"200.20.20.2");
+            Router3.SetRoute(destination:"192.168.10.0",gateway:"200.20.20.1");
+            Router3.SetRoute(destination:"192.168.20.0",gateway:"200.20.20.1");
+            string[] msgs; (msgs, _) = PC1.Ping("192.168.20.11");
+            foreach(string msg in msgs)
+                Console.WriteLine(msg);
         }
 
     }

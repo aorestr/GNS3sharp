@@ -16,7 +16,7 @@ public class VPC : Guest{
     // Show arp table
     public string[] ShowArp(){
 
-        // Reception varible as a string
+        // Reception variable as a string
         string[] in_txt = null;
 
         Send($"arp");
@@ -29,7 +29,7 @@ public class VPC : Guest{
     // Clear certain parameters
     public string[] Clear(string parameter){
 
-        // Reception varible as a string
+        // Reception variable as a string
         string[] in_txt = null;
 
         string[] validParamters = {
@@ -50,7 +50,7 @@ public class VPC : Guest{
     // Use DHCP for assigning the IP
     public string[] DHCP(){
 
-        // Reception varible as a string
+        // Reception variable as a string
         string[] in_txt = null;
 
         Send("DHCP");
@@ -63,7 +63,7 @@ public class VPC : Guest{
     // Show current config
     public string[] ShowConf(){
 
-        // Reception varible as a string
+        // Reception variable as a string
         string[] in_txt = null;
 
         Send($"show");
@@ -75,10 +75,10 @@ public class VPC : Guest{
 
     // Set an IP for the VPC
     public override string[] SetIP(
-        string IP, string netmask = "255.255.255.0", int adapter_number = 0, string gateway = null
+        string IP, string netmask = "255.255.255.0", ushort adapter_number = 0, string gateway = null
         ){
 
-        // Reception varible as a string
+        // Reception variable as a string
         string[] in_txt = null;
         // Netmask in CIDR notation
         short netmaskInt = Aux.NetmaskCIDR(netmask);
@@ -102,36 +102,10 @@ public class VPC : Guest{
 
     }
 
-    // Send ping to a certain IP
-    public (string[], bool reached) Ping(string IP){
-
-        // Reception varible as a string
-        string[] in_txt = null;
-
-        if(Aux.IsIP(IP)) {
-            Send($"ping {IP}");
-            in_txt = Receive();
-        } else{
-            Console.Error.WriteLine($"{IP} is not a valid IP");
-        }
-
-        /*
-        ///////////////
-        TO DO
-         */
-        // Check if the ping went right
-        bool reached = false;
-        //////////////
-
-        // Return the response
-        return (in_txt, reached);
-
-    }
-
     // Show the route to a certain IP
     public string[] Trace(string IP){
 
-        // Reception varible as a string
+        // Reception variable as a string
         string[] in_txt = null;
 
         if(Aux.IsIP(IP)) {
