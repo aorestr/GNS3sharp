@@ -23,14 +23,20 @@ public class GNS3sharp {
 
     // List of nodes inside the project with all the info about them.
     // The info is not filtered
-    private List<Dictionary<string,object>> projectJSON;
-    public List<Dictionary<string,object>> ProjectJSON{ get => projectJSON; }
+    private List<Dictionary<string,object>> nodesJSON;
+    public List<Dictionary<string,object>> NodesJSON{ get => nodesJSON; }
+
+    // Same for the links
+    private List<Dictionary<string,object>> linksJSON;
+    public List<Dictionary<string,object>> LinksJSON{ get => linksJSON; }
 
     // List of nodes the project has
     private Node[] nodes; public Node[] Nodes{ get{return nodes;} }
 
     // HTTP client used to make POST in order to start or stop the nodes
     private static readonly HttpClient HTTPclient = new HttpClient();
+
+    ///////////////////////////// Constructors ////////////////////////////////////////////
 
     // Wrong constructor. It needs an ID for the project
     public GNS3sharp() => Console.Error.WriteLine("You need the project ID");
@@ -39,32 +45,41 @@ public class GNS3sharp {
     // the project has
     public GNS3sharp(string _projectID, string _host = "localhost", ushort _port = 3080) {
         this.projectID = _projectID; this.host = _host; this.port = _port;
-        // Defines the URL in which the nodes info is
-        string projectURL = $"http://{_host}:{_port.ToString()}/v2/projects/{_projectID}/nodes";
+        // Defines the URL where the info is
+        string baseURL = $"http://{_host}:{_port.ToString()}/v2/projects/{_projectID}";
         // Extract that info
-        projectJSON = extractProjectJSON(projectURL);
-        if (projectJSON != null){
+        nodesJSON = extractNodesDictionary($"{baseURL}/nodes");
+        linksJSON = extractLinksDictionary($"{baseURL}/links");
+        if (nodesJSON != null){
             // Create the nodes related to that info
-            nodes = getNodes(projectJSON);
+            nodes = getNodes(nodesJSON);
         }
+    }
 
+    ///////////////////////////////// Methods ////////////////////////////////////////////
+
+    // It returns a dictionary with information about the nodes of the project
+    private static List<Dictionary<string,object>> extractNodesDictionary(string URL){
+        return extractDictionary(URL, "nodes");    
+    }
+
+    // It returns a dictionary with information about the project
+    private static List<Dictionary<string,object>> extractLinksDictionary(string URL){
+        return extractDictionary(URL, "links");    
     }
 
     // It returns a dictionary with information about the nodes of the project
-    private static List<Dictionary<string,object>> extractProjectJSON(string projectURL){
+    private static List<Dictionary<string,object>> extractDictionary(string URL, string type){
+        
+        // Raw string
+        string json = extractJSONString(URL);
 
-        // Variable with a string with all the JSON info
-        string json;
-        try{
-            // Get the info from the JSON file you can access from the GNS3 Rest service
-            using (System.Net.WebClient GNS3NodesProject = new System.Net.WebClient()){
-                json = GNS3NodesProject.DownloadString(projectURL);
-            }
-        } catch(Exception err){
-            // Server not open
-            Console.Error.WriteLine("Impossible to connect to project {0}: {1}",projectURL, err.Message);
-            json = null;
-        }
+        // Depending on the JSON from we have downloaded the data
+        string lastElement = null;
+        if (type.Equals("nodes"))
+            lastElement = "z";
+        else
+            lastElement = "suspend";
 
         // Creates a list of dictionaries. It will be used to store the JSON info and
         // get the values from it
@@ -86,7 +101,7 @@ public class GNS3sharp {
                     value = (object)jP.Value;
                     tempDict.Add(name,value);
                     // The last key of every node is 'z'
-                    if (jP.Name == "z") {
+                    if (jP.Name.Equals(lastElement)) {
                         // If we do not copy the content of the dictionary into another
                         // we will be copying by reference and erase the content once
                         // we 'clear' the dict
@@ -104,11 +119,29 @@ public class GNS3sharp {
                 }
             }
             */
-            return dictList;
         } else{
             dictList = null;
         }
-        return dictList;    
+        return dictList;
+
+        // Extract a JSON from a GET request
+        string extractJSONString(string local_URL){
+            // Variable with a string with all the JSON info
+            string local_json;
+            try{
+                // Get the info from the JSON file you can access from the GNS3 Rest service
+                using (System.Net.WebClient GNS3NodesProject = new System.Net.WebClient()){
+                    local_json = GNS3NodesProject.DownloadString(local_URL);
+                }
+            } catch(Exception err){
+                // Server not open
+                Console.Error.WriteLine("Impossible to connect to URL {0}: {1}", local_URL, err.Message);
+                local_json = null;
+            }
+
+            return local_json;
+        }
+
     }
 
     // Create an array with the nodes. Each element is a Node instance
