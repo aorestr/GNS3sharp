@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
+using GNS3_UNITY_API;
 
 namespace GNS3_UNITY_API {
     class Program {
@@ -17,6 +18,14 @@ namespace GNS3_UNITY_API {
             foreach(Node n in handler.Nodes){
                 Console.WriteLine("host: {0}, port: {1}, name: {2}, component: {3}",
                     n.ConsoleHost, n.Port, n.Name, n.GetType().ToString());
+            }
+        }
+
+        // Show every node information
+        public static void Example1_5(GNS3sharp handler){
+            foreach(Link l in handler.Links){
+                Console.WriteLine("id: {0}, nodes: {1}, delay: {2}",
+                    l.ID, l.Nodes, l.Delay);
             }
         }
 

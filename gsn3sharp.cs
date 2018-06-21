@@ -33,6 +33,9 @@ public class GNS3sharp {
     // List of nodes the project has
     private Node[] nodes; public Node[] Nodes{ get{return nodes;} }
 
+    //List of links the project has. We will use a struct
+    private Link[] links; public Link[] Links{ get{return links;} }
+
     // HTTP client used to make POST in order to start or stop the nodes
     private static readonly HttpClient HTTPclient = new HttpClient();
 
@@ -53,6 +56,7 @@ public class GNS3sharp {
         if (nodesJSON != null){
             // Create the nodes related to that info
             nodes = getNodes(nodesJSON);
+            links = getLinks(linksJSON);
         }
     }
 
@@ -163,7 +167,7 @@ public class GNS3sharp {
                     );
                 } catch(Exception err1){
                     Console.Error.WriteLine(
-                        "Impossible to save the configuration for the node {0}: {1}", 
+                        "Impossible to save the configuration for the node #{0}: {1}", 
                         i.ToString(), err1.Message
                     );
                 }
@@ -177,6 +181,37 @@ public class GNS3sharp {
         }
 
         return listOfNodes;
+    }
+
+    // Create an array with the links. It contains information about the
+    private static Link[] getLinks(List<Dictionary<string,object>> JSON){
+        Link[] listOfLinks = new Link[JSON.Count];
+
+        int i = 0;
+        try{
+            foreach(Dictionary<string, object> link in JSON){
+                try{
+                    listOfLinks[i++] = new Link(
+                        link["link_id"].ToString(),
+                        new Node[2],
+                        new Dictionary<string, int>()
+                    );
+                } catch(Exception err1){
+                    Console.Error.WriteLine(
+                        "Impossible to save the configuration for the link #{0}: {1}", 
+                        i.ToString(), err1.Message
+                    );
+                }
+            }
+        } catch(Exception err2){
+            Console.Error.WriteLine(
+                "Some problem occured while saving the links information: {0}",
+                err2.Message
+            );
+            listOfLinks = null;
+        }
+
+        return listOfLinks;
     }
 
     // Initialize all the nodes in the project
@@ -239,4 +274,17 @@ public class GNS3sharp {
         return foundNode;
     }
 
+}
+
+// Structure that handles every link
+public struct Link{
+    // ID
+    private string id; public string ID { get {return id;} }
+    // Nodes the link connects
+    private Node[] nodes; public Node[] Nodes { get {return nodes;} }
+    // Parameters of the link
+    private Dictionary<string,int> delay; public Dictionary<string,int> Delay { get {return delay;} }
+    public Link(string _id, Node[] _nodes, Dictionary<string,int> _delay){
+        id = _id; nodes = _nodes; delay = _delay;
+    }
 }
