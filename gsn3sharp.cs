@@ -33,8 +33,12 @@ public class GNS3sharp {
     // List of nodes the project has
     private Node[] nodes; public Node[] Nodes{ get{return nodes;} }
 
-    //List of links the project has. We will use a struct
+    // List of links the project has. We will use a struct
     private Link[] links; public Link[] Links{ get{return links;} }
+
+    // These dictionaries will help getting the nodes by name and ID
+    private Dictionary<string, Node> nodesByName = new Dictionary<string, Node>();
+    private Dictionary<string, Node> nodesByID = new Dictionary<string, Node>();
 
     // HTTP client used to make POST in order to start or stop the nodes
     private static readonly HttpClient HTTPclient = new HttpClient();
@@ -51,85 +55,36 @@ public class GNS3sharp {
         // Defines the URL where the info is
         string baseURL = $"http://{_host}:{_port.ToString()}/v2/projects/{_projectID}";
         // Extract that info
-        nodesJSON = extractNodesDictionary($"{baseURL}/nodes");
-        linksJSON = extractLinksDictionary($"{baseURL}/links");
+        Console.Write($"Extracting nodes information from URL: {baseURL}/nodes... ");
+        nodesJSON = ExtractNodesDictionary($"{baseURL}/nodes");
+        Console.WriteLine(" ok");
+        Console.Write($"Extracting links information from URL: {baseURL}/links... ");
+        linksJSON = ExtractLinksDictionary($"{baseURL}/links");
+        Console.WriteLine(" ok");
         if (nodesJSON != null){
             // Create the nodes related to that info
-            nodes = getNodes(nodesJSON);
-            links = getLinks(linksJSON);
+            nodes = GetNodes(nodesJSON);
+            links = GetLinks(linksJSON);
         }
     }
 
     ///////////////////////////////// Methods ////////////////////////////////////////////
 
     // It returns a dictionary with information about the nodes of the project
-    private static List<Dictionary<string,object>> extractNodesDictionary(string URL){
-        return extractDictionary(URL, "nodes");    
+    private static List<Dictionary<string,object>> ExtractNodesDictionary(string URL){
+        return ExtractDictionary(URL, "nodes");    
     }
 
     // It returns a dictionary with information about the project
-    private static List<Dictionary<string,object>> extractLinksDictionary(string URL){
-        return extractDictionary(URL, "links");    
+    private static List<Dictionary<string,object>> ExtractLinksDictionary(string URL){
+        return ExtractDictionary(URL, "links");    
     }
 
     // It returns a dictionary with information about the nodes of the project
-    private static List<Dictionary<string,object>> extractDictionary(string URL, string type){
+    private static List<Dictionary<string,object>> ExtractDictionary(string URL, string type){
         
-        // Raw string
-        string json = extractJSONString(URL);
-
-        // Depending on the JSON from we have downloaded the data
-        string lastElement = null;
-        if (type.Equals("nodes"))
-            lastElement = "z";
-        else
-            lastElement = "suspend";
-
-        // Creates a list of dictionaries. It will be used to store the JSON info and
-        // get the values from it
-        List<Dictionary<string,object>> dictList = new List<Dictionary<string,object>>();
-        if(json == "[]"){
-            Console.Error.WriteLine("JSON is empty");
-            dictList = null;
-        } else if (string.IsNullOrEmpty(json) == false){
-            // JSON array object
-            JArray jsonArray = JArray.Parse(json);
-            Dictionary<string,object> tempDict = new Dictionary<string, object>();
-
-            // Variables in which store the JSON info temporaly
-            string name; object value;
-            
-            foreach (JObject jO in jsonArray.Children<JObject>()) {
-                foreach (JProperty jP in jO.Properties()) {                
-                    name = jP.Name;
-                    value = (object)jP.Value;
-                    tempDict.Add(name,value);
-                    // The last key of every node is 'z'
-                    if (jP.Name.Equals(lastElement)) {
-                        // If we do not copy the content of the dictionary into another
-                        // we will be copying by reference and erase the content once
-                        // we 'clear' the dict
-                        Dictionary<string, object> copyDict = new Dictionary<string, object>(tempDict);
-                        dictList.Add(copyDict);
-                        tempDict.Clear();
-                    }
-                }
-            }
-            /*
-            // Show content of the list
-            foreach(Dictionary<string, object> dict in dictList){
-                foreach (KeyValuePair<string, object> kvp in dict){
-                    Console.WriteLine("Key = {0}, Value = {1}", kvp.Key, kvp.Value);
-                }
-            }
-            */
-        } else{
-            dictList = null;
-        }
-        return dictList;
-
         // Extract a JSON from a GET request
-        string extractJSONString(string local_URL){
+        string ExtractJSONString(string local_URL){
             // Variable with a string with all the JSON info
             string local_json;
             try{
@@ -146,25 +101,94 @@ public class GNS3sharp {
             return local_json;
         }
 
+        // Raw string
+        string json = ExtractJSONString(URL);
+
+        // Depending on the JSON from we have downloaded the data
+        string lastElement = null;
+        if (type.Equals("nodes"))
+            lastElement = "z";
+        else
+            lastElement = "suspend";
+
+        // Creates a list of dictionaries. It will be used to store the JSON info and
+        // get the values from it
+        List<Dictionary<string,object>> dictList = new List<Dictionary<string,object>>();
+        if(json == "[]"){
+            Console.Error.WriteLine("JSON is empty");
+            dictList = null;
+        } else if (string.IsNullOrEmpty(json) == false){
+            dictList = DeserializeJSON(json, lastElement);
+            /*
+            // Show content of the list
+            foreach(Dictionary<string, object> dict in dictList){
+                foreach (KeyValuePair<string, object> kvp in dict){
+                    Console.WriteLine("Key = {0}, Value = {1}", kvp.Key, kvp.Value);
+                }
+            }
+            */
+        } else{
+            dictList = null;
+        }
+        return dictList;
+
+    }
+
+    // Desearialize a certain JSON and store it in a list of dictionaries.
+    // lastKey indicates the last key of a dictionary
+    private static List<Dictionary<string,object>> DeserializeJSON(string json, string lastKey){
+        
+        // Return variable
+        List<Dictionary<string,object>> dictList = new List<Dictionary<string,object>>();
+        // JSON array object
+        JArray jsonArray = JArray.Parse(json);
+        Dictionary<string,object> tempDict = new Dictionary<string, object>();
+
+        // Variables in which store the JSON info temporaly
+        string name; object value;
+        
+        foreach (JObject jO in jsonArray.Children<JObject>()) {
+            foreach (JProperty jP in jO.Properties()) {                
+                name = jP.Name;
+                value = (object)jP.Value;
+                tempDict.Add(name,value);
+                // The last key of every node
+                if (jP.Name.Equals(lastKey)) {
+                    // If we do not copy the content of the dictionary into another
+                    // we will be copying by reference and erase the content once
+                    // we 'clear' the dict
+                    Dictionary<string, object> copyDict = new Dictionary<string, object>(tempDict);
+                    dictList.Add(copyDict);
+                    tempDict.Clear();
+                }
+            }
+        }
+        return dictList;
     }
 
     // Create an array with the nodes. Each element is a Node instance
-    private static Node[] getNodes(List<Dictionary<string,object>> JSON){
+    private Node[] GetNodes(List<Dictionary<string,object>> JSON){
+        // Return variable
         Node[] listOfNodes = new Node[JSON.Count];
 
         Type classType; int i = 0;
         try{
             foreach(Dictionary<string, object> node in JSON){
                 try{
+                    Console.Write($"Gathering information for node #{i}... ");
                     // Assign a class or another depending on the node
                     classType = Aux.NodeType(node["name"].ToString());
-                    listOfNodes[i++] = (Node)Activator.CreateInstance(
+                    listOfNodes[i] = (Node)Activator.CreateInstance(
                         classType,
                         node["console_host"].ToString(), 
                         ushort.Parse(node["console"].ToString()), 
                         node["name"].ToString(),
                         node["node_id"].ToString()
                     );
+                    nodesByName.Add(listOfNodes[i].Name, listOfNodes[i]);
+                    nodesByID.Add(listOfNodes[i].ID, listOfNodes[i]);
+                    i++;
+                    Console.WriteLine(" ok");
                 } catch(Exception err1){
                     Console.Error.WriteLine(
                         "Impossible to save the configuration for the node #{0}: {1}", 
@@ -184,18 +208,49 @@ public class GNS3sharp {
     }
 
     // Create an array with the links. It contains information about the
-    private static Link[] getLinks(List<Dictionary<string,object>> JSON){
+    private Link[] GetLinks(List<Dictionary<string,object>> JSON){
+        // Return variable
         Link[] listOfLinks = new Link[JSON.Count];
+
+        Node[] NodesConnected(string nodesJSON){
+            // Return variable
+            Node[] nodesList = new Node[2];
+            List<Dictionary<string,object>> dictList = null;
+            try{
+                // Extract the nodes connected by the link
+                dictList = DeserializeJSON(nodesJSON, "port_number");
+            } catch (Exception err){
+                Console.Error.WriteLine(
+                    "Some problem occured while trying to gather information about the nodes connect to the link: {0}",
+                    err.Message
+                );
+            }
+            if (dictList.Count != 0){
+                ushort idx = 0;
+                foreach (Dictionary<string, object> node in dictList){
+                    try{
+                        nodesList[idx++] = nodesByID[node["node_id"].ToString()];
+                    } catch(Exception){
+                        Console.Error.WriteLine(
+                            $"Unknown node with ID: {node["node_id"].ToString()}"
+                        );
+                    }
+                }
+            }
+            return nodesList;
+        }
 
         int i = 0;
         try{
             foreach(Dictionary<string, object> link in JSON){
                 try{
+                    Console.Write($"Gathering information for link #{i}... ");
                     listOfLinks[i++] = new Link(
                         link["link_id"].ToString(),
-                        new Node[2],
+                        NodesConnected(link["nodes"].ToString()),
                         new Dictionary<string, int>()
                     );
+                    Console.WriteLine(" ok");
                 } catch(Exception err1){
                     Console.Error.WriteLine(
                         "Impossible to save the configuration for the link #{0}: {1}", 
@@ -260,18 +315,29 @@ public class GNS3sharp {
     }
 
     // Find the element that corresponds to a certain name.
-    // A casting is compulsory in order to use the Node submethods
-    public Node getNodeByName(string name){
+    // A casting is compulsory in order to use the Node submethods.
+    // Returns null if it can't be matched
+    public Node GetNodeByName(string name){
+        
         Node foundNode = null;
-
-        foreach(Node n in nodes){
-            if (n.Name.Equals(name)){
-                foundNode = n;
-                break;
-            }
-        }
-
+        try{
+            foundNode = nodesByName[name];
+        } catch{}
         return foundNode;
+
+    }
+
+    // Find the element that corresponds to a certain ID.
+    // A casting is compulsory in order to use the Node submethods.
+    // Returns null if it can't be matched
+    public Node GetNodeByID(string ID){
+        
+        Node foundNode = null;
+        try{
+            foundNode = nodesByID[ID];
+        } catch{}
+        return foundNode;
+
     }
 
 }

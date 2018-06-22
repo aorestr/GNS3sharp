@@ -8,6 +8,7 @@ namespace GNS3_UNITY_API {
         static void Main(string[] args) {
             GNS3sharp handler = new GNS3sharp("61261064-a2a4-4666-8f26-d2dbfbbe26a4");
             Example1(handler);
+            Example1_5(handler);
             //Example2(handler);
             //Example3(handler);
             //Example4();
@@ -33,7 +34,7 @@ namespace GNS3_UNITY_API {
         public static void Example2(GNS3sharp handler){
             string[] in_txt = null;
             try{
-                VPC PC = (VPC)handler.getNodeByName("[VPC]PC_Lleida");
+                VPC PC = (VPC)handler.GetNodeByName("[VPC]PC_Lleida");
                 in_txt = PC.ShowConf();
                 foreach(string lin in in_txt){
                     Console.WriteLine($"{lin}");
@@ -70,12 +71,12 @@ namespace GNS3_UNITY_API {
         // Example https://www.youtube.com/watch?v=rMrPJlKXsJ8
         public static void Example4(){
             GNS3sharp handler = new GNS3sharp("61261064-a2a4-4666-8f26-d2dbfbbe26a4");
-            MicroCore PC1 = (MicroCore)handler.getNodeByName("[MICROCORE]PC_Lleida");
-            MicroCore PC2 = (MicroCore)handler.getNodeByName("[MICROCORE]PC_Mollerusa");
-            MicroCore PC3 = (MicroCore)handler.getNodeByName("[MICROCORE]PC_Balaguer");
-            OpenWRT Router1 = (OpenWRT)handler.getNodeByName("[OPENWRT]Lleida");
-            OpenWRT Router2 = (OpenWRT)handler.getNodeByName("[OPENWRT]Mollerusa");
-            OpenWRT Router3 = (OpenWRT)handler.getNodeByName("[OPENWRT]Balaguer");
+            MicroCore PC1 = (MicroCore)handler.GetNodeByName("[MICROCORE]PC_Lleida");
+            MicroCore PC2 = (MicroCore)handler.GetNodeByName("[MICROCORE]PC_Mollerusa");
+            MicroCore PC3 = (MicroCore)handler.GetNodeByName("[MICROCORE]PC_Balaguer");
+            OpenWRT Router1 = (OpenWRT)handler.GetNodeByName("[OPENWRT]Lleida");
+            OpenWRT Router2 = (OpenWRT)handler.GetNodeByName("[OPENWRT]Mollerusa");
+            OpenWRT Router3 = (OpenWRT)handler.GetNodeByName("[OPENWRT]Balaguer");
             PC1.SetIP(IP:"192.168.10.11",gateway:"192.168.10.1");
             PC2.SetIP(IP:"192.168.20.11",gateway:"192.168.20.1");
             PC3.SetIP(IP:"192.168.30.11",gateway:"192.168.30.1");
