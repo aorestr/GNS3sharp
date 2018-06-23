@@ -145,21 +145,22 @@ public class GNS3sharp {
         Dictionary<string,object> tempDict = new Dictionary<string, object>();
 
         // Variables in which store the JSON info temporaly
-        string name; object value;
-        
-        foreach (JObject jO in jsonArray.Children<JObject>()) {
-            foreach (JProperty jP in jO.Properties()) {                
-                name = jP.Name;
-                value = (object)jP.Value;
-                tempDict.Add(name,value);
-                // The last key of every node
-                if (jP.Name.Equals(lastKey)) {
-                    // If we do not copy the content of the dictionary into another
-                    // we will be copying by reference and erase the content once
-                    // we 'clear' the dict
-                    Dictionary<string, object> copyDict = new Dictionary<string, object>(tempDict);
-                    dictList.Add(copyDict);
-                    tempDict.Clear();
+        string name; object value;        
+        if (jsonArray.HasValues){
+            foreach (JObject jO in jsonArray.Children<JObject>()) {
+                foreach (JProperty jP in jO.Properties()) {                
+                    name = jP.Name;
+                    value = (object)jP.Value;
+                    tempDict.Add(name,value);
+                    // The last key of every node
+                    if (jP.Name.Equals(lastKey)) {
+                        // If we do not copy the content of the dictionary into another
+                        // we will be copying by reference and erase the content once
+                        // we 'clear' the dict
+                        Dictionary<string, object> copyDict = new Dictionary<string, object>(tempDict);
+                        dictList.Add(copyDict);
+                        tempDict.Clear();
+                    }
                 }
             }
         }
@@ -211,13 +212,12 @@ public class GNS3sharp {
     private Link[] GetLinks(List<Dictionary<string,object>> JSON){
         // Return variable
         Link[] listOfLinks = new Link[JSON.Count];
-
+        // Function that returns the nodes connected by the link
         Node[] NodesConnected(string nodesJSON){
             // Return variable
             Node[] nodesList = new Node[2];
             List<Dictionary<string,object>> dictList = null;
             try{
-                // Extract the nodes connected by the link
                 dictList = DeserializeJSON(nodesJSON, "port_number");
             } catch (Exception err){
                 Console.Error.WriteLine(
@@ -239,21 +239,51 @@ public class GNS3sharp {
             }
             return nodesList;
         }
+        // Extract a certain filter of the link
+        int ExtractFilter(JObject filtJSON, string filter){
+            
+            int filterValue = 0;
 
-        int i = 0;
+            try{
+                if (filter.Equals("latency"))
+                    filterValue = filtJSON.Property("delay").First.ToObject<int[]>()[0];
+                else if (filter.Equals("jitter"))
+                    filterValue = filtJSON.Property("delay").First.ToObject<int[]>()[1];
+                else
+                    filterValue = filtJSON.Property(filter).First.ToObject<int[]>()[0];
+            } catch (Exception){}
+            
+            return filterValue;
+        }
+
+        JObject filtersJSON; int i = 0;
         try{
             foreach(Dictionary<string, object> link in JSON){
                 try{
                     Console.Write($"Gathering information for link #{i}... ");
-                    listOfLinks[i++] = new Link(
-                        link["link_id"].ToString(),
-                        NodesConnected(link["nodes"].ToString()),
-                        new Dictionary<string, int>()
-                    );
+                    filtersJSON = JObject.Parse(link["filters"].ToString());
+                    if (filtersJSON.HasValues){
+                        // If the link has some filter activates
+                        listOfLinks[i++] = new Link(
+                            link["link_id"].ToString(),
+                            NodesConnected(link["nodes"].ToString()),
+                            ExtractFilter(filtersJSON, "frequency_drop"),
+                            ExtractFilter(filtersJSON, "packet_loss"),
+                            ExtractFilter(filtersJSON, "latency"),
+                            ExtractFilter(filtersJSON, "jitter"),
+                            ExtractFilter(filtersJSON, "corrupt")
+                        );
+                    } else{
+                        // If don't
+                        listOfLinks[i++] = new Link(
+                            link["link_id"].ToString(),
+                            NodesConnected(link["nodes"].ToString())
+                        );
+                    }
                     Console.WriteLine(" ok");
                 } catch(Exception err1){
                     Console.Error.WriteLine(
-                        "Impossible to save the configuration for the link #{0}: {1}", 
+                        $"Impossible to save the configuration for the link #{0}: {1}", 
                         i.ToString(), err1.Message
                     );
                 }
@@ -340,17 +370,4 @@ public class GNS3sharp {
 
     }
 
-}
-
-// Structure that handles every link
-public struct Link{
-    // ID
-    private string id; public string ID { get {return id;} }
-    // Nodes the link connects
-    private Node[] nodes; public Node[] Nodes { get {return nodes;} }
-    // Parameters of the link
-    private Dictionary<string,int> delay; public Dictionary<string,int> Delay { get {return delay;} }
-    public Link(string _id, Node[] _nodes, Dictionary<string,int> _delay){
-        id = _id; nodes = _nodes; delay = _delay;
-    }
 }

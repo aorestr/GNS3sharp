@@ -7,7 +7,7 @@ namespace GNS3_UNITY_API {
     class Program {
         static void Main(string[] args) {
             GNS3sharp handler = new GNS3sharp("61261064-a2a4-4666-8f26-d2dbfbbe26a4");
-            Example1(handler);
+            //Example1(handler);
             Example1_5(handler);
             //Example2(handler);
             //Example3(handler);
@@ -25,8 +25,9 @@ namespace GNS3_UNITY_API {
         // Show every node information
         public static void Example1_5(GNS3sharp handler){
             foreach(Link l in handler.Links){
-                Console.WriteLine("id: {0}, nodes: {1}, delay: {2}",
-                    l.ID, l.Nodes, l.Delay);
+                Console.WriteLine("id: {0}, nodes: {1}, packet_loss: {2}, frequency_drop: {3},",
+                    l.ID, l.Nodes, l.PacketLoss, l.FrequencyDrop);
+                Console.WriteLine("latency: {0}, jitter: {1}, corrupt: {2}", l.Latency, l.Jitter, l.Corrupt);
             }
         }
 
