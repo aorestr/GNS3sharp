@@ -66,6 +66,7 @@ public class GNS3sharp {
             nodes = GetNodes(nodesJSON);
             links = GetLinks(linksJSON);
         }
+        SaveLinksInfoInNodes();
     }
 
     ///////////////////////////////// Methods ////////////////////////////////////////////
@@ -299,6 +300,17 @@ public class GNS3sharp {
         return listOfLinks;
     }
 
+    // Save a list in every node with information about the links that are
+    // atrached to them
+    private void SaveLinksInfoInNodes(){
+        foreach (Link link in this.links){
+            foreach(Node node in link.Nodes){
+                if(node != null)
+                    node.LinksAttached.Add(link);
+            }
+        }
+    }
+
     // Initialize all the nodes in the project
     public string[] StartProject(){
         return ChangeProjectStatus("start");
@@ -320,7 +332,7 @@ public class GNS3sharp {
         string[] totalMessages = new string[numNodes];
 
         // Pack the content we will send
-        string content = JsonConvert.SerializeObject(new Dictionary<string, string> { { "-d", "{}" } });
+        string content = JsonConvert.SerializeObject(new Dictionary<string, string> { { "", "" } });
         ByteArrayContent byteContent = new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(content));
         byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
@@ -342,6 +354,44 @@ public class GNS3sharp {
 
         // If everything goes right, it returns info about every node
         return totalMessages;
+    }
+
+    public string SetLink(Node node1, Node node2){
+        // Return variable
+        string messageReceived = null;
+        // URL where send the data
+        string URL = $"http://{host}:{port}/v2/projects/{projectID}/links";
+
+        Dictionary<string, dynamic>[] nodesInfo = new Dictionary<string, dynamic>[]{
+            new Dictionary<string, dynamic>(){
+                {"adapter_number", 1}, {"node_id", $"{node1.ID}"}, {"port_number", 0}
+            },
+            new Dictionary<string, dynamic>(){
+                {"adapter_number", 3}, {"node_id", $"{node2.ID}"}, {"port_number", 0}
+            }
+        };
+        Dictionary<string, int[]> filtersInfo = new Dictionary<string, int[]>{
+            {"frequency_drop", new int[1]{2}}, {"packet_loss", new int[1]{2}},
+            {"delay", new int[2]{2,2}}, {"corrupt", new int[1]{2}}
+        };
+
+        // Pack the content we will send
+        string content = JsonConvert.SerializeObject(new Dictionary<string, dynamic> { 
+            { "nodes", nodesInfo }, { "filters" , filtersInfo }
+        });
+        ByteArrayContent byteContent = new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(content));
+        byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+        try{
+            var res = HTTPclient.PostAsync(
+                $"{URL}", byteContent
+            ).Result.Content.ReadAsStringAsync();
+            messageReceived = res.Result.ToString();
+        } catch(Exception err){
+            Console.Error.WriteLine("Impossible to modify the link: {0}", err.Message);
+        }
+
+        return messageReceived;
     }
 
     // Find the element that corresponds to a certain name.

@@ -3,6 +3,7 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.IO;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
 using GNS3_UNITY_API;
@@ -13,8 +14,14 @@ public class Node{
     protected ushort port; public ushort Port { get => port; }
     protected string name; public string Name { get => name; }
     protected string id; public string ID { get => id; }
+    // List of links connected to the node
+    protected List<Link> linksAttached = new List<Link>();
+    public List<Link> LinksAttached { get => linksAttached; }
+
     protected TcpClient tcpConnection; public TcpClient TCPConnection { get => tcpConnection; }
     protected NetworkStream netStream; public NetworkStream NetStream { get => netStream; }
+
+    ///////////////////////////// Constructors ////////////////////////////////////////////
 
     // Constructor by default. It's not intended to be used
     public Node(){
@@ -29,7 +36,7 @@ public class Node{
     }
 
     // In case we want to clone the instance
-    protected Node(Node clone){
+    public Node(Node clone){
         this.consoleHost = clone.ConsoleHost; this.port = clone.Port;
         this.name = clone.Name; this.id = clone.ID;
         this.tcpConnection = clone.TCPConnection; this.netStream = clone.NetStream;
@@ -46,6 +53,8 @@ public class Node{
                 this.tcpConnection.Close();
         } catch{}
     }
+
+    ///////////////////////////////// Methods ////////////////////////////////////////////
 
     // Stablish a TCP connection with the node
     protected (TcpClient Connection, NetworkStream Stream) Connect(int timeout = 10000){

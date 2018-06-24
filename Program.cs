@@ -8,17 +8,22 @@ namespace GNS3_UNITY_API {
         static void Main(string[] args) {
             GNS3sharp handler = new GNS3sharp("61261064-a2a4-4666-8f26-d2dbfbbe26a4");
             //Example1(handler);
-            Example1_5(handler);
+            //Example1_5(handler);
             //Example2(handler);
             //Example3(handler);
             //Example4();
+            Example5(handler);
         }
        
         // Show every node information
         public static void Example1(GNS3sharp handler){
             foreach(Node n in handler.Nodes){
-                Console.WriteLine("host: {0}, port: {1}, name: {2}, component: {3}",
+                Console.Write("host: {0}, port: {1}, name: {2}, component: {3}",
                     n.ConsoleHost, n.Port, n.Name, n.GetType().ToString());
+                foreach(Link link in n.LinksAttached){
+                    Console.Write($", link: {link.ID}");
+                }
+                Console.WriteLine();
             }
         }
 
@@ -97,6 +102,10 @@ namespace GNS3_UNITY_API {
             string[] msgs; (msgs, _) = PC1.Ping("192.168.20.11");
             foreach(string msg in msgs)
                 Console.WriteLine(msg);
+        }
+
+        public static void Example5(GNS3sharp handler){
+            Console.WriteLine(handler.SetLink(handler.GetNodeByName("[OPENWRT]Lleida"), handler.GetNodeByName("[OPENWRT]Mollerusa")));
         }
 
     }
