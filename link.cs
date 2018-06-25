@@ -1,9 +1,14 @@
+using System;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Collections.Generic;
+using Newtonsoft.Json;
 using GNS3_UNITY_API;
 
 /*
  Structure that handles every link
  */
-public struct Link{
+public class Link{
     // ID
     private string id; public string ID { get {return id;} }
     // Nodes the link connects
@@ -50,18 +55,28 @@ public struct Link{
             else if (value > 100) corrupt = 100;
             else corrupt = value;
         }
-    }                      
+    }
+    // Information about the server (host, port and projectID)
+    private Dictionary<string,string> serverInfo;
+    // HTTP client used to interact with the REST API
+    private readonly HttpClient HTTPclient;
+
+    ///////////////////////////// Constructors ////////////////////////////////////////////
+
     // Constructor with all filters different from 0
-    public Link(string _id, Node[] _nodes){
-        id = _id; nodes = _nodes; frequencyDrop = 0; packetLoss = 0;
+    public Link(string _id, Node[] _nodes, Dictionary<string, string> _serverInfo, HttpClient _HTTPclient){
+        id = _id; nodes = _nodes; serverInfo = _serverInfo; HTTPclient = _HTTPclient;
+        frequencyDrop = 0; packetLoss = 0;
         latency = 0; jitter = 0; corrupt = 0;
     }
     // Constructor with any filter different from 0
     public Link(
-        string _id, Node[] _nodes, int _frequencyDrop, int _packetLoss,
-        int _latency, int _jitter, int _corrupt
+        string _id, Node[] _nodes, Dictionary<string, string> _serverInfo, HttpClient _HTTPclient,
+        int _frequencyDrop=0, int _packetLoss=0, int _latency=0, int _jitter=0, int _corrupt=0
         ){
-        id = _id; nodes = _nodes; frequencyDrop = _frequencyDrop; packetLoss = _packetLoss;
+        id = _id; nodes = _nodes; serverInfo = _serverInfo; HTTPclient = _HTTPclient;
+        frequencyDrop = _frequencyDrop; packetLoss = _packetLoss;
         latency = _latency; jitter = _jitter; corrupt = _corrupt;
     }
+
 }

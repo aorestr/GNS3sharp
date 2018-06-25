@@ -34,13 +34,13 @@ public class GNS3sharp {
     private Node[] nodes; public Node[] Nodes{ get{return nodes;} }
 
     // List of links the project has. We will use a struct
-    private Link[] links; public Link[] Links{ get{return links;} }
+    private List<Link> links; public List<Link> Links{ get{return links;} }
 
     // These dictionaries will help getting the nodes by name and ID
     private Dictionary<string, Node> nodesByName = new Dictionary<string, Node>();
     private Dictionary<string, Node> nodesByID = new Dictionary<string, Node>();
 
-    // HTTP client used to make POST in order to start or stop the nodes
+    // HTTP client used to interact with the REST API
     private static readonly HttpClient HTTPclient = new HttpClient();
 
     ///////////////////////////// Constructors ////////////////////////////////////////////
@@ -56,10 +56,10 @@ public class GNS3sharp {
         string baseURL = $"http://{_host}:{_port.ToString()}/v2/projects/{_projectID}";
         // Extract that info
         Console.Write($"Extracting nodes information from URL: {baseURL}/nodes... ");
-        nodesJSON = ExtractNodesDictionary($"{baseURL}/nodes");
+        ExtractNodesDictionary($"{baseURL}/nodes");
         Console.WriteLine(" ok");
         Console.Write($"Extracting links information from URL: {baseURL}/links... ");
-        linksJSON = ExtractLinksDictionary($"{baseURL}/links");
+        ExtractLinksDictionary($"{baseURL}/links");
         Console.WriteLine(" ok");
         if (nodesJSON != null){
             // Create the nodes related to that info
@@ -72,13 +72,13 @@ public class GNS3sharp {
     ///////////////////////////////// Methods ////////////////////////////////////////////
 
     // It returns a dictionary with information about the nodes of the project
-    private static List<Dictionary<string,object>> ExtractNodesDictionary(string URL){
-        return ExtractDictionary(URL, "nodes");    
+    private void ExtractNodesDictionary(string URL){
+        nodesJSON = ExtractDictionary(URL, "nodes");    
     }
 
     // It returns a dictionary with information about the project
-    private static List<Dictionary<string,object>> ExtractLinksDictionary(string URL){
-        return ExtractDictionary(URL, "links");    
+    private void ExtractLinksDictionary(string URL){
+        linksJSON = ExtractDictionary(URL, "links");    
     }
 
     // It returns a dictionary with information about the nodes of the project
@@ -210,9 +210,9 @@ public class GNS3sharp {
     }
 
     // Create an array with the links. It contains information about the
-    private Link[] GetLinks(List<Dictionary<string,object>> JSON){
+    private List<Link> GetLinks(List<Dictionary<string,object>> JSON){
         // Return variable
-        Link[] listOfLinks = new Link[JSON.Count];
+        List<Link> listOfLinks = new List<Link>();
         // Function that returns the nodes connected by the link
         Node[] NodesConnected(string nodesJSON){
             // Return variable
@@ -262,24 +262,30 @@ public class GNS3sharp {
             foreach(Dictionary<string, object> link in JSON){
                 try{
                     Console.Write($"Gathering information for link #{i}... ");
+                    Dictionary<string, string> serverInfo = new Dictionary<string, string>(){
+                        {"host", this.host}, {"port", this.port.ToString()},
+                        {"projectID", this.projectID}
+                    };
                     filtersJSON = JObject.Parse(link["filters"].ToString());
                     if (filtersJSON.HasValues){
                         // If the link has some filter activates
-                        listOfLinks[i++] = new Link(
+                        listOfLinks.Add(new Link(
                             link["link_id"].ToString(),
                             NodesConnected(link["nodes"].ToString()),
+                            serverInfo, HTTPclient,
                             ExtractFilter(filtersJSON, "frequency_drop"),
                             ExtractFilter(filtersJSON, "packet_loss"),
                             ExtractFilter(filtersJSON, "latency"),
                             ExtractFilter(filtersJSON, "jitter"),
                             ExtractFilter(filtersJSON, "corrupt")
-                        );
+                        ));
                     } else{
                         // If don't
-                        listOfLinks[i++] = new Link(
+                        listOfLinks.Add(new Link(
                             link["link_id"].ToString(),
-                            NodesConnected(link["nodes"].ToString())
-                        );
+                            NodesConnected(link["nodes"].ToString()),
+                            serverInfo, HTTPclient
+                        ));
                     }
                     Console.WriteLine(" ok");
                 } catch(Exception err1){
@@ -332,66 +338,97 @@ public class GNS3sharp {
         string[] totalMessages = new string[numNodes];
 
         // Pack the content we will send
-        string content = JsonConvert.SerializeObject(new Dictionary<string, string> { { "", "" } });
-        ByteArrayContent byteContent = new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(content));
-        byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        ByteArrayContent byteContent = null;
+        try{
+            string content = JsonConvert.SerializeObject(new Dictionary<string, string> { { "", "" } });
+            byteContent = new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(content));
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        } catch(JsonSerializationException err){
+            Console.Error.WriteLine("Impossible to serialize the JSON to send it to the API: {0}", err.Message);
+        } 
 
         if (status.Equals("start"))
             Console.WriteLine("Activating all the nodes in the project...");
         else
             Console.WriteLine("Deactivating all the nodes in the project...");
-        for (ushort i = 0; i < numNodes; i++){
-            try{
-                var res = HTTPclient.PostAsync(
-                    $"{URLHeader}/{nodes[i].ID}/{status}", byteContent
-                ).Result.Content.ReadAsStringAsync();
-                totalMessages[i] = res.Result.ToString();
-            } catch(Exception err){
-                Console.Error.WriteLine("Impossible to {2} node {0}: {1}", nodes[i].Name, err.Message, status);
+
+        if (byteContent != null){
+            for (ushort i = 0; i < numNodes; i++){
+                try{
+                    var res = HTTPclient.PostAsync(
+                        $"{URLHeader}/{nodes[i].ID}/{status}", byteContent
+                    ).Result.Content.ReadAsStringAsync();
+                    totalMessages[i] = res.Result.ToString();
+                } catch(HttpRequestException err){
+                    Console.Error.WriteLine("Some problem occured with the HTTP connection: {0}", err.Message);
+                } catch(Exception err){
+                    Console.Error.WriteLine("Impossible to {2} node {0}: {1}", nodes[i].Name, err.Message, status);
+                }
             }
+            Console.WriteLine("...ok");
         }
-        Console.WriteLine("...ok");
 
         // If everything goes right, it returns info about every node
         return totalMessages;
     }
 
-    public string SetLink(Node node1, Node node2){
-        // Return variable
-        string messageReceived = null;
-        // URL where send the data
-        string URL = $"http://{host}:{port}/v2/projects/{projectID}/links";
+    // Create a new link
+    public bool SetLink(Node node1, Node node2, 
+        int frequencyDrop=0, int packetLoss=0,
+        int latency=0, int jitter=0, int corrupt=0){
+        
+        bool linkCreated;
+        if (node1 != null && node2 != null){
+            // URL where send the data
+            string URL = ($"http://{host}:{port}/v2/projects/{projectID}/links");
 
-        Dictionary<string, dynamic>[] nodesInfo = new Dictionary<string, dynamic>[]{
-            new Dictionary<string, dynamic>(){
-                {"adapter_number", 1}, {"node_id", $"{node1.ID}"}, {"port_number", 0}
-            },
-            new Dictionary<string, dynamic>(){
-                {"adapter_number", 3}, {"node_id", $"{node2.ID}"}, {"port_number", 0}
+            Dictionary<string, dynamic>[] nodesInfo = new Dictionary<string, dynamic>[]{
+                new Dictionary<string, dynamic>(){
+                    {"adapter_number", 1}, {"node_id", $"{node1.ID}"}, {"port_number", 0}
+                },
+                new Dictionary<string, dynamic>(){
+                    {"adapter_number", 3}, {"node_id", $"{node2.ID}"}, {"port_number", 0}
+                }
+            };
+            Dictionary<string, int[]> filtersInfo = new Dictionary<string, int[]>{
+                {"frequency_drop", new int[1]{frequencyDrop}}, {"packet_loss", new int[1]{packetLoss}},
+                {"delay", new int[2]{latency,jitter}}, {"corrupt", new int[1]{corrupt}}
+            };
+
+            try{
+                // Pack the content we will send
+                string content = JsonConvert.SerializeObject(new Dictionary<string, dynamic> { 
+                    { "nodes", nodesInfo }, { "filters" , filtersInfo }
+                });
+                ByteArrayContent byteContent = new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(content));
+                byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                var res = HTTPclient.PostAsync(
+                    $"{URL}", byteContent
+                ).Result.Content.ReadAsStringAsync();
+                string messageReceived = res.Result.ToString();
+
+                Dictionary<string, string> serverInfo = new Dictionary<string, string>(){
+                    {"host", this.host}, {"port", this.port.ToString()},
+                    {"projectID", this.projectID},
+                };
+
+                linkCreated = true;
+            } catch(JsonSerializationException err){
+                Console.Error.WriteLine("Impossible to serialize the JSON to send it to the API: {0}", err.Message);
+                linkCreated = false;
+            } catch(HttpRequestException err){
+                Console.Error.WriteLine("Some problem occured with the HTTP connection: {0}", err.Message);
+                linkCreated = false;
+            } catch(Exception err){
+                Console.Error.WriteLine("Impossible to create the link: {0}", err.Message);
+                linkCreated = false;
             }
-        };
-        Dictionary<string, int[]> filtersInfo = new Dictionary<string, int[]>{
-            {"frequency_drop", new int[1]{2}}, {"packet_loss", new int[1]{2}},
-            {"delay", new int[2]{2,2}}, {"corrupt", new int[1]{2}}
-        };
+        } else{
+            Console.Error.WriteLine("Some of the chosen nodes doesn't exist");
+            linkCreated = false;
+        }        
 
-        // Pack the content we will send
-        string content = JsonConvert.SerializeObject(new Dictionary<string, dynamic> { 
-            { "nodes", nodesInfo }, { "filters" , filtersInfo }
-        });
-        ByteArrayContent byteContent = new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(content));
-        byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-
-        try{
-            var res = HTTPclient.PostAsync(
-                $"{URL}", byteContent
-            ).Result.Content.ReadAsStringAsync();
-            messageReceived = res.Result.ToString();
-        } catch(Exception err){
-            Console.Error.WriteLine("Impossible to modify the link: {0}", err.Message);
-        }
-
-        return messageReceived;
+        return linkCreated;
     }
 
     // Find the element that corresponds to a certain name.
