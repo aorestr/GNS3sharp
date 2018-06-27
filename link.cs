@@ -2,6 +2,7 @@ using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using GNS3_UNITY_API;
 
@@ -80,9 +81,32 @@ public class Link{
     }
 
     ///////////////////////////////// Methods ////////////////////////////////////////////
-    /*
-    public bool EditLink(){
+    public bool EditLink(
+        int _frequencyDrop=-10, int _packetLoss=-10,
+        int _latency=-10, int _jitter=-10, int _corrupt=-10
+        ){
+        // Return variable
+        bool linkEdited;
 
+        // Check the filters that is going to modify
+        bool filterChanges = true;
+        if (_frequencyDrop != -10){ filterChanges = true; FrequencyDrop = _frequencyDrop; }
+        if (_packetLoss != -10){ filterChanges = true; PacketLoss = _packetLoss; }
+        if (_latency != -10){ filterChanges = true; Latency = _latency; }
+        if (_jitter != -10){ filterChanges = true; Jitter = _jitter; }
+        if (_corrupt != -10){ filterChanges = true; Corrupt = _corrupt; }
+
+        if (!filterChanges){
+            linkEdited = false;
+        } else{
+            Dictionary<string, int[]> filtersInfo = new Dictionary<string, int[]>{
+                {"frequency_drop", new int[1]{this.frequencyDrop}},
+                {"packet_loss", new int[1]{this.packetLoss}},
+                {"delay", new int[2]{ this.latency, this.jitter }},
+                {"corrupt", new int[1]{this.corrupt}}
+            };
+            linkEdited = true;
+        }
+        return linkEdited;
     }
-    */
 }
