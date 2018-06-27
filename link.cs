@@ -10,13 +10,13 @@ using GNS3_UNITY_API;
  */
 public class Link{
     // ID
-    private string id; public string ID { get {return id;} }
+    private string id; public string ID { get => id; }
     // Nodes the link connects
-    private Node[] nodes; public Node[] Nodes { get {return nodes;} }
+    private Node[] nodes; public Node[] Nodes { get  => nodes; }
     // Parameters of the link
     private int frequencyDrop;              // th
     public int FrequencyDrop { 
-        get {return frequencyDrop;}
+        get => frequencyDrop;
         set {
             if (value < -1) frequencyDrop = 0;
             else frequencyDrop = value;
@@ -24,7 +24,7 @@ public class Link{
     }
     private int packetLoss;                 // %
     public int PacketLoss { 
-        get {return packetLoss;}
+        get  => packetLoss;
         set {
             if (value < 0) packetLoss = 0;
             else if (value > 100) packetLoss = 100;
@@ -33,7 +33,7 @@ public class Link{
     }    
     private int latency;                    // ms
     public int Latency {
-        get {return latency;}
+        get => latency;
         set {
             if (value < 0) latency = 0;
             else latency = value;
@@ -41,7 +41,7 @@ public class Link{
     }
     private int jitter;                     // ms
     public int Jitter {
-        get {return jitter;}
+        get => jitter;
         set {
             if (value < 0) jitter = 0;
             else jitter = value;
@@ -79,4 +79,10 @@ public class Link{
         latency = _latency; jitter = _jitter; corrupt = _corrupt;
     }
 
+    ///////////////////////////////// Methods ////////////////////////////////////////////
+    /*
+    public bool EditLink(){
+
+    }
+    */
 }

@@ -24,17 +24,31 @@ public class GNS3sharp {
     // List of nodes inside the project with all the info about them.
     // The info is not filtered
     private List<Dictionary<string,object>> nodesJSON;
-    public List<Dictionary<string,object>> NodesJSON{ get => nodesJSON; }
+    public List<Dictionary<string,object>> NodesJSON{
+        get {
+            ExtractNodesDictionary(
+                $"http://{host}:{port.ToString()}/v2/projects/{projectID}/nodes"
+            );
+            return nodesJSON;
+        }
+    }
 
     // Same for the links
     private List<Dictionary<string,object>> linksJSON;
-    public List<Dictionary<string,object>> LinksJSON{ get => linksJSON; }
+    public List<Dictionary<string,object>> LinksJSON{
+        get {
+            ExtractLinksDictionary(
+                $"http://{host}:{port.ToString()}/v2/projects/{projectID}/links"
+            );
+            return linksJSON;
+        }
+    }
 
     // List of nodes the project has
-    private Node[] nodes; public Node[] Nodes{ get{return nodes;} }
+    private Node[] nodes; public Node[] Nodes{ get => nodes; }
 
     // List of links the project has. We will use a struct
-    private List<Link> links; public List<Link> Links{ get{return links;} }
+    private List<Link> links; public List<Link> Links{ get => links; }
 
     // These dictionaries will help getting the nodes by name and ID
     private Dictionary<string, Node> nodesByName = new Dictionary<string, Node>();
@@ -66,7 +80,13 @@ public class GNS3sharp {
             nodes = GetNodes(nodesJSON);
             links = GetLinks(linksJSON);
         }
-        SaveLinksInfoInNodes();
+        try{
+            SaveLinksInfoInNodes(links);
+        } catch(Exception err){
+            Console.Error.WriteLine(
+                $"Ups, something went wrong. Unable to save the link info in the nodes: {err}"
+            );
+        }
     }
 
     ///////////////////////////////// Methods ////////////////////////////////////////////
@@ -214,7 +234,7 @@ public class GNS3sharp {
         // Return variable
         List<Link> listOfLinks = new List<Link>();
         // Function that returns the nodes connected by the link
-        Node[] NodesConnected(string nodesJSON){
+        Node[] GetNodesConnectedByLink(string nodesJSON){
             // Return variable
             Node[] nodesList = new Node[2];
             List<Dictionary<string,object>> dictList = null;
@@ -258,20 +278,20 @@ public class GNS3sharp {
         }
 
         JObject filtersJSON; int i = 0;
+        Dictionary<string, string> serverInfo = new Dictionary<string, string>(){
+            {"host", this.host}, {"port", this.port.ToString()},
+            {"projectID", this.projectID}
+        };
         try{
             foreach(Dictionary<string, object> link in JSON){
                 try{
                     Console.Write($"Gathering information for link #{i}... ");
-                    Dictionary<string, string> serverInfo = new Dictionary<string, string>(){
-                        {"host", this.host}, {"port", this.port.ToString()},
-                        {"projectID", this.projectID}
-                    };
                     filtersJSON = JObject.Parse(link["filters"].ToString());
                     if (filtersJSON.HasValues){
                         // If the link has some filter activates
                         listOfLinks.Add(new Link(
                             link["link_id"].ToString(),
-                            NodesConnected(link["nodes"].ToString()),
+                            GetNodesConnectedByLink(link["nodes"].ToString()),
                             serverInfo, HTTPclient,
                             ExtractFilter(filtersJSON, "frequency_drop"),
                             ExtractFilter(filtersJSON, "packet_loss"),
@@ -283,10 +303,11 @@ public class GNS3sharp {
                         // If don't
                         listOfLinks.Add(new Link(
                             link["link_id"].ToString(),
-                            NodesConnected(link["nodes"].ToString()),
+                            GetNodesConnectedByLink(link["nodes"].ToString()),
                             serverInfo, HTTPclient
                         ));
                     }
+                    i++;
                     Console.WriteLine(" ok");
                 } catch(Exception err1){
                     Console.Error.WriteLine(
@@ -308,8 +329,8 @@ public class GNS3sharp {
 
     // Save a list in every node with information about the links that are
     // atrached to them
-    private void SaveLinksInfoInNodes(){
-        foreach (Link link in this.links){
+    private void SaveLinksInfoInNodes(List<Link> listOfLinks){
+        foreach (Link link in listOfLinks){
             foreach(Node node in link.Nodes){
                 if(node != null)
                     node.LinksAttached.Add(link);
@@ -382,12 +403,31 @@ public class GNS3sharp {
             // URL where send the data
             string URL = ($"http://{host}:{port}/v2/projects/{projectID}/links");
 
+            // Get the ID assigned by GNS3 of the new link
+            string ExtractIDNewLink(string JSONLink){
+                // Return variable
+                string newID = null;
+
+                // Parse the JSON string into an object
+                JObject jO = JObject.Parse(JSONLink);      
+                if (jO.HasValues){
+                    foreach (JProperty jP in jO.Properties()) {                
+                        if (jP.Name.ToString().Equals("link_id")){
+                            newID = (string)jP.Value;
+                            break;
+                        }
+                    }
+                }
+
+                return newID;
+            }
+
             Dictionary<string, dynamic>[] nodesInfo = new Dictionary<string, dynamic>[]{
                 new Dictionary<string, dynamic>(){
                     {"adapter_number", 1}, {"node_id", $"{node1.ID}"}, {"port_number", 0}
                 },
                 new Dictionary<string, dynamic>(){
-                    {"adapter_number", 3}, {"node_id", $"{node2.ID}"}, {"port_number", 0}
+                    {"adapter_number", 2}, {"node_id", $"{node2.ID}"}, {"port_number", 0}
                 }
             };
             Dictionary<string, int[]> filtersInfo = new Dictionary<string, int[]>{
@@ -402,17 +442,35 @@ public class GNS3sharp {
                 });
                 ByteArrayContent byteContent = new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(content));
                 byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                // Send it
                 var res = HTTPclient.PostAsync(
                     $"{URL}", byteContent
                 ).Result.Content.ReadAsStringAsync();
-                string messageReceived = res.Result.ToString();
+                string newID = ExtractIDNewLink(res.Result.ToString());
 
-                Dictionary<string, string> serverInfo = new Dictionary<string, string>(){
-                    {"host", this.host}, {"port", this.port.ToString()},
-                    {"projectID", this.projectID},
-                };
-
-                linkCreated = true;
+                if (newID == null){
+                    Console.Error.WriteLine("Impossible to create the link: impossible to get its ID");
+                    linkCreated = false;
+                } else{
+                    Dictionary<string, string> serverInfo = new Dictionary<string, string>(){
+                        {"host", this.host}, {"port", this.port.ToString()},
+                        {"projectID", this.projectID},
+                    };
+                    // Adds the new link to our list
+                    Link newLink = new Link(
+                        newID,
+                        new Node[2]{node1, node2},
+                        serverInfo, HTTPclient,
+                        frequencyDrop,
+                        packetLoss,
+                        latency,
+                        jitter,
+                        corrupt
+                    );
+                    links.Add(newLink);
+                    SaveLinksInfoInNodes(new List<Link>(){newLink});
+                    linkCreated = true;
+                }
             } catch(JsonSerializationException err){
                 Console.Error.WriteLine("Impossible to serialize the JSON to send it to the API: {0}", err.Message);
                 linkCreated = false;

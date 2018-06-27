@@ -8,11 +8,12 @@ namespace GNS3_UNITY_API {
         static void Main(string[] args) {
             GNS3sharp handler = new GNS3sharp("61261064-a2a4-4666-8f26-d2dbfbbe26a4");
             //Example1(handler);
-            //Example1_5(handler);
+            Example1_5(handler);
             //Example2(handler);
             //Example3(handler);
             //Example4();
             Example5(handler);
+            Example1_5(handler);
         }
        
         // Show every node information
@@ -105,7 +106,7 @@ namespace GNS3_UNITY_API {
         }
 
         public static void Example5(GNS3sharp handler){
-            Console.WriteLine(handler.SetLink(handler.GetNodeByName("[OPENWRT]Lleida"), handler.GetNodeByName("[OPENWRT]Mollerusa")));
+            Console.WriteLine(handler.SetLink(handler.GetNodeByName("[OPENWRT]Lleida"), handler.GetNodeByName("[OPENWRT]Mollerusa"), latency:45));
         }
 
     }
