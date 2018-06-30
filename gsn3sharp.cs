@@ -2,6 +2,7 @@ using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using GNS3_UNITY_API;
@@ -436,40 +437,50 @@ public class GNS3sharp {
             };
 
             try{
+
                 // Pack the content we will send
                 string content = JsonConvert.SerializeObject(new Dictionary<string, dynamic> { 
                     { "nodes", nodesInfo }, { "filters" , filtersInfo }
                 });
                 ByteArrayContent byteContent = new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(content));
                 byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                // Send it
+                // Send it. It returns a string with the info about the link
                 var res = HTTPclient.PostAsync(
                     $"{URL}", byteContent
-                ).Result.Content.ReadAsStringAsync();
-                string newID = ExtractIDNewLink(res.Result.ToString());
-
-                if (newID == null){
-                    Console.Error.WriteLine("Impossible to create the link: impossible to get its ID");
+                ).Result;
+                if (!res.IsSuccessStatusCode){
+                    Console.Error.WriteLine("Impossible to create the link: the status of the response is not success");
                     linkCreated = false;
                 } else{
-                    Dictionary<string, string> serverInfo = new Dictionary<string, string>(){
-                        {"host", this.host}, {"port", this.port.ToString()},
-                        {"projectID", this.projectID},
-                    };
-                    // Adds the new link to our list
-                    Link newLink = new Link(
-                        newID,
-                        new Node[2]{node1, node2},
-                        serverInfo, HTTPclient,
-                        frequencyDrop,
-                        packetLoss,
-                        latency,
-                        jitter,
-                        corrupt
-                    );
-                    links.Add(newLink);
-                    SaveLinksInfoInNodes(new List<Link>(){newLink});
-                    linkCreated = true;
+                    string responseString = res.Content.ReadAsStringAsync().Result.ToString();
+                    // Extract the ID from the new link created
+                    string newID = ExtractIDNewLink(responseString);
+
+                    if (newID == null){
+                        Console.Error.WriteLine("Impossible to create the link: impossible to get its ID");
+                        linkCreated = false;
+                    } else{
+                        Dictionary<string, string> serverInfo = new Dictionary<string, string>(){
+                            {"host", this.host}, {"port", this.port.ToString()},
+                            {"projectID", this.projectID},
+                        };
+                        // Adds the new link to our list
+                        Link newLink = new Link(
+                            newID,
+                            new Node[2]{node1, node2},
+                            serverInfo, HTTPclient,
+                            frequencyDrop,
+                            packetLoss,
+                            latency,
+                            jitter,
+                            corrupt
+                        );
+                        // Add the new link to the project list of links
+                        links.Add(newLink);
+                        // Add the new link to each node list of links
+                        SaveLinksInfoInNodes(new List<Link>(){newLink});
+                        linkCreated = true;
+                    }
                 }
             } catch(JsonSerializationException err){
                 Console.Error.WriteLine("Impossible to serialize the JSON to send it to the API: {0}", err.Message);
@@ -487,6 +498,74 @@ public class GNS3sharp {
         }        
 
         return linkCreated;
+    }
+
+    // Edit a link according to the parameters introduced
+    public bool EditLink(Link link,
+        int frequencyDrop=-10, int packetLoss=-10,
+        int latency=-10, int jitter=-10, int corrupt=-10
+        ){
+        // Return variable
+        bool linkEdited;
+        if (link != null)
+            linkEdited = link.EditLink(
+                frequencyDrop, packetLoss, latency,
+                jitter, corrupt
+            );
+        else 
+            linkEdited = false;
+
+        return linkEdited;
+    }
+
+    // Edit a link according to the parameters introduced
+    public bool EditLink(Node node1, Node node2,
+        int frequencyDrop=-10, int packetLoss=-10,
+        int latency=-10, int jitter=-10, int corrupt=-10
+        ){
+        // Return variable
+        bool linkEdited;
+
+        Link link = GetLinkByNodes(node1, node2);
+        if (link != null){
+            linkEdited = this.EditLink(
+                link, frequencyDrop, packetLoss,
+                latency, jitter, corrupt
+            );
+        } else{
+            linkEdited = false;
+        }
+
+        return linkEdited;
+
+    }
+
+    // Find the link two nodes share
+    public Link GetLinkByNodes(Node node1, Node node2){
+        // Return variable
+        Link link;
+
+        if (node1 != null && node2 != null){
+            Link[] linkNode1 = node1.LinksAttached.ToArray();
+            Link[] linkNode2 = node2.LinksAttached.ToArray();
+            if (linkNode1 != null && linkNode2 != null){
+                var sharedLink = linkNode1.Intersect(linkNode2);
+                if (sharedLink.Count() > 0){
+                    // In case the nodes share at least one common 
+                    // link, it gets the first one
+                    link = sharedLink.First();
+                } else{
+                    link = null;
+                }
+            } else{
+                link = null;
+            }
+        } else{
+            Console.Error.WriteLine("Some of the chosen nodes doesn't exist");
+            link = null;
+        }
+
+        return link;
     }
 
     // Find the element that corresponds to a certain name.

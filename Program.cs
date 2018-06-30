@@ -13,6 +13,10 @@ namespace GNS3_UNITY_API
             //Example3(handler);
             //Example4();
             Example5(handler);
+            Console.WriteLine(
+                $"1: {handler.GetNodeByID("c9f74135-6260-4943-bc19-5cb25ecfb306").Name}, " +
+                $"2: {handler.GetNodeByID("4f33a76c-57e4-45eb-ad1e-15b9ce44416f").Name}"
+            );
             Example1_5(handler);
         }
        
@@ -107,6 +111,12 @@ namespace GNS3_UNITY_API
 
         public static void Example5(GNS3sharp handler){
             Console.WriteLine(handler.SetLink(handler.GetNodeByName("[OPENWRT]Lleida"), handler.GetNodeByName("[OPENWRT]Mollerusa"), latency:45));
+            Console.WriteLine(
+                handler.EditLink(
+                    handler.GetNodeByName("[OPENWRT]Balaguer"), handler.GetNodeByName("[OPENWRT]Mollerusa"),
+                    latency:9, packetLoss:3, jitter:0, frequencyDrop:74
+                )
+            );
         }
 
     }
