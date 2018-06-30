@@ -140,7 +140,7 @@ public class GNS3sharp {
             Console.Error.WriteLine("JSON is empty");
             dictList = null;
         } else if (string.IsNullOrEmpty(json) == false){
-            dictList = DeserializeJSON(json, lastElement);
+            dictList = DeserializeJSONList(json, lastElement);
             /*
             // Show content of the list
             foreach(Dictionary<string, object> dict in dictList){
@@ -158,7 +158,7 @@ public class GNS3sharp {
 
     // Desearialize a certain JSON and store it in a list of dictionaries.
     // lastKey indicates the last key of a dictionary
-    private static List<Dictionary<string,object>> DeserializeJSON(string json, string lastKey){
+    private static List<Dictionary<string,object>> DeserializeJSONList(string json, string lastKey){
         
         // Return variable
         List<Dictionary<string,object>> dictList = new List<Dictionary<string,object>>();
@@ -194,6 +194,31 @@ public class GNS3sharp {
         // Return variable
         Node[] listOfNodes = new Node[JSON.Count];
 
+        // Extract the ports a node has
+        Dictionary<string,ushort>[] GetNodeListOfPorts(Dictionary<string, object> node){
+            List<Dictionary<string,ushort>> ports = new List<Dictionary<string,ushort>>();
+
+            try{
+                // Extract a dictionary with the ports defined in the project nodes JSON
+                Dictionary<string,object>[] portsRaw = DeserializeJSONList(
+                    node["ports"].ToString(), "short_name"
+                ).ToArray();
+                foreach(Dictionary<string,object> nodePort in portsRaw){
+                    ports.Add(
+                        new Dictionary<string,ushort>(){
+                            {"adapterNumber", UInt16.Parse(nodePort["adapter_number"].ToString())},
+                            {"portNumber", UInt16.Parse(nodePort["port_number"].ToString())},
+                            {"status", 0}
+                        } 
+                    );
+                }
+            } catch (Exception err){
+                Console.Error.WriteLine($"Something went wrong while extracting the ports info: {err}");
+            }
+
+            return ports.ToArray();
+        }
+
         Type classType; int i = 0;
         try{
             foreach(Dictionary<string, object> node in JSON){
@@ -206,7 +231,8 @@ public class GNS3sharp {
                         node["console_host"].ToString(), 
                         ushort.Parse(node["console"].ToString()), 
                         node["name"].ToString(),
-                        node["node_id"].ToString()
+                        node["node_id"].ToString(),
+                        GetNodeListOfPorts(node)
                     );
                     nodesByName.Add(listOfNodes[i].Name, listOfNodes[i]);
                     nodesByID.Add(listOfNodes[i].ID, listOfNodes[i]);
@@ -240,7 +266,7 @@ public class GNS3sharp {
             Node[] nodesList = new Node[2];
             List<Dictionary<string,object>> dictList = null;
             try{
-                dictList = DeserializeJSON(nodesJSON, "port_number");
+                dictList = DeserializeJSONList(nodesJSON, "port_number");
             } catch (Exception err){
                 Console.Error.WriteLine(
                     "Some problem occured while trying to gather information about the nodes connect to the link: {0}",

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using GNS3_UNITY_API;
 
 public class VPC : Guest{
@@ -9,8 +10,9 @@ public class VPC : Guest{
 
     // Constructors
     public VPC() : base() {}
-    public VPC(string _consoleHost, ushort _port, string _name, string _id) : 
-        base(_consoleHost, _port, _name, _id){}
+    public VPC(string _consoleHost, ushort _port, string _name, string _id,
+        Dictionary<string,ushort>[] _ports) : 
+        base(_consoleHost, _port, _name, _id, _ports){}
     public VPC(Node father) : base(father){}
 
     // Show arp table

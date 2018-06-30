@@ -1,12 +1,14 @@
 using System;
+using System.Collections.Generic;
 using GNS3_UNITY_API;
 
 public abstract class Guest : Node{
 
     // Constructors
     public Guest() : base() {}
-    public Guest(string _consoleHost, ushort _port, string _name, string _id) : 
-        base(_consoleHost, _port, _name, _id){}
+    public Guest(string _consoleHost, ushort _port, string _name, string _id,
+        Dictionary<string,ushort>[] _ports) : 
+        base(_consoleHost, _port, _name, _id, _ports){}
     public Guest(Node clone) : base(clone){}
 
     // Methods every guest subclass must have

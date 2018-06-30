@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using GNS3_UNITY_API;
 
@@ -7,17 +8,12 @@ namespace GNS3_UNITY_API
     class Program {
         static void Main(string[] args) {
             GNS3sharp handler = new GNS3sharp("61261064-a2a4-4666-8f26-d2dbfbbe26a4");
-            //Example1(handler);
+            Example1(handler);
             Example1_5(handler);
             //Example2(handler);
             //Example3(handler);
             //Example4();
-            Example5(handler);
-            Console.WriteLine(
-                $"1: {handler.GetNodeByID("c9f74135-6260-4943-bc19-5cb25ecfb306").Name}, " +
-                $"2: {handler.GetNodeByID("4f33a76c-57e4-45eb-ad1e-15b9ce44416f").Name}"
-            );
-            Example1_5(handler);
+            //Example5(handler);
         }
        
         // Show every node information
@@ -27,6 +23,11 @@ namespace GNS3_UNITY_API
                     n.ConsoleHost, n.Port, n.Name, n.GetType().ToString());
                 foreach(Link link in n.LinksAttached){
                     Console.Write($", link: {link.ID}");
+                }
+                foreach(Dictionary<string,ushort> port in n.Ports){
+                    Console.Write($",\n\tport, adapter number: {port["adapterNumber"]}");
+                    Console.Write($",\n\tport, port number: {port["portNumber"]}");
+                    Console.Write($",\n\tport, status: {port["status"]}");
                 }
                 Console.WriteLine();
             }

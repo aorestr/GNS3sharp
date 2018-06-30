@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using GNS3_UNITY_API;
 
 public class OpenWRT : Router{
@@ -8,8 +9,9 @@ public class OpenWRT : Router{
 
     // Constructors
     public OpenWRT() : base() {}
-    public OpenWRT(string _consoleHost, ushort _port, string _name, string _id) : 
-        base(_consoleHost, _port, _name, _id){}
+    public OpenWRT(string _consoleHost, ushort _port, string _name, string _id,
+        Dictionary<string,ushort>[] _ports) : 
+        base(_consoleHost, _port, _name, _id, _ports){}
     public OpenWRT(Node father) : base(father){}
 
     // This routers' terminal needs to be initialize with a \n

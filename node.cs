@@ -14,10 +14,16 @@ public class Node{
     protected ushort port; public ushort Port { get => port; }
     protected string name; public string Name { get => name; }
     protected string id; public string ID { get => id; }
+
+    // Ports of the node. It contains information about every network interface
+    // (adapterNumber, portNumber, status->(0 if free, 1 if used))
+    protected Dictionary<string,ushort>[] ports; public Dictionary<string,ushort>[] Ports{ get => ports; }
+
     // List of links connected to the node
     protected List<Link> linksAttached = new List<Link>();
     public List<Link> LinksAttached { get => linksAttached; }
 
+    // Connection properties
     protected TcpClient tcpConnection; public TcpClient TCPConnection { get => tcpConnection; }
     protected NetworkStream netStream; public NetworkStream NetStream { get => netStream; }
 
@@ -30,15 +36,18 @@ public class Node{
     }
 
     // Constructor that sets all the parameters for the node
-    public Node(string _consoleHost, ushort _port, string _name, string _id){
+    public Node(string _consoleHost, ushort _port, string _name, string _id,
+        Dictionary<string,ushort>[] _ports){
+            
         this.consoleHost = _consoleHost; this.port = _port; this.name = _name; this.id = _id;
+        this.ports = _ports;
         (this.tcpConnection, this.netStream) = this.Connect();
     }
 
     // In case we want to clone the instance
     public Node(Node clone){
         this.consoleHost = clone.ConsoleHost; this.port = clone.Port;
-        this.name = clone.Name; this.id = clone.ID;
+        this.name = clone.Name; this.id = clone.ID; this.ports = clone.Ports;
         this.tcpConnection = clone.TCPConnection; this.netStream = clone.NetStream;
     }
 
