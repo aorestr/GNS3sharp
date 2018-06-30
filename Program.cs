@@ -117,6 +117,7 @@ namespace GNS3_UNITY_API
                     latency:9, packetLoss:3, jitter:0, frequencyDrop:74
                 )
             );
+            Console.WriteLine(handler.RemoveLink(handler.GetNodeByName("[OPENWRT]Lleida"), handler.GetNodeByName("[OPENWRT]Mollerusa")));
         }
 
     }

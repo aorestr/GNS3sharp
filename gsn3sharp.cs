@@ -500,46 +500,6 @@ public class GNS3sharp {
         return linkCreated;
     }
 
-    // Edit a link according to the parameters introduced
-    public bool EditLink(Link link,
-        int frequencyDrop=-10, int packetLoss=-10,
-        int latency=-10, int jitter=-10, int corrupt=-10
-        ){
-        // Return variable
-        bool linkEdited;
-        if (link != null)
-            linkEdited = link.EditLink(
-                frequencyDrop, packetLoss, latency,
-                jitter, corrupt
-            );
-        else 
-            linkEdited = false;
-
-        return linkEdited;
-    }
-
-    // Edit a link according to the parameters introduced
-    public bool EditLink(Node node1, Node node2,
-        int frequencyDrop=-10, int packetLoss=-10,
-        int latency=-10, int jitter=-10, int corrupt=-10
-        ){
-        // Return variable
-        bool linkEdited;
-
-        Link link = GetLinkByNodes(node1, node2);
-        if (link != null){
-            linkEdited = this.EditLink(
-                link, frequencyDrop, packetLoss,
-                latency, jitter, corrupt
-            );
-        } else{
-            linkEdited = false;
-        }
-
-        return linkEdited;
-
-    }
-
     // Find the link two nodes share
     public Link GetLinkByNodes(Node node1, Node node2){
         // Return variable
@@ -566,6 +526,93 @@ public class GNS3sharp {
         }
 
         return link;
+    }
+
+    // Edit a link according to the parameters introduced
+    public bool EditLink(Link link,
+        int frequencyDrop=-10, int packetLoss=-10,
+        int latency=-10, int jitter=-10, int corrupt=-10
+        ){
+        // Return variable
+        bool linkEdited;
+        if (link != null)
+            linkEdited = link.EditLink(
+                frequencyDrop, packetLoss, latency,
+                jitter, corrupt
+            );
+        else 
+            linkEdited = false;
+
+        return linkEdited;
+    }
+
+    // Edit a link according to the parameters introduced
+    public bool EditLink(Node node1, Node node2,
+        int frequencyDrop=-10, int packetLoss=-10,
+        int latency=-10, int jitter=-10, int corrupt=-10
+        ){
+        // Return variable
+        bool linkEdited;
+        if (node1 != null && node2 != null){
+            linkEdited = this.EditLink(
+                GetLinkByNodes(node1, node2),
+                frequencyDrop, packetLoss,
+                latency, jitter, corrupt
+            );
+        }
+        else{
+            Console.Error.WriteLine("Some of the chosen nodes doesn't exist");
+            linkEdited = false;
+        }
+
+        return linkEdited;
+
+    }
+
+    // Remove a link of the project
+    public bool RemoveLink(Link link){
+        // Return variable
+        bool linkRemoved;
+        if (link != null){
+            string URLHeader = $"http://{host}:{port}/v2/projects/{projectID}/links";
+
+            try{
+
+                if (HTTPclient.DeleteAsync($"{URLHeader}/{link.ID}").Result.IsSuccessStatusCode){
+                    foreach(Node node in link.Nodes) node.LinksAttached.Remove(link);
+                    this.links.Remove(link); link = null;
+                    linkRemoved = true;
+                } else{
+                    linkRemoved = false;
+                }
+
+            } catch(HttpRequestException err){
+                Console.Error.WriteLine("Some problem occured with the HTTP connection: {0}", err.Message);
+                linkRemoved = false;
+            } catch(Exception err){
+                Console.Error.WriteLine("Impossible to remove the link: {0}", err.Message);
+                linkRemoved = false;
+            }
+        } else{
+            linkRemoved = false;
+        }
+
+        return linkRemoved;
+    }
+
+    // Remove a link of the project
+    public bool RemoveLink(Node node1, Node node2){
+        // Return variable
+        bool linkRemoved;
+
+        if (node1 != null && node2 != null)
+            linkRemoved = this.RemoveLink(GetLinkByNodes(node1, node2));
+        else{
+            Console.Error.WriteLine("Some of the chosen nodes doesn't exist");
+            linkRemoved = false;
+        }
+
+        return linkRemoved;
     }
 
     // Find the element that corresponds to a certain name.
