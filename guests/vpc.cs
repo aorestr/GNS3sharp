@@ -11,7 +11,7 @@ public class VPC : Guest{
     // Constructors
     public VPC() : base() {}
     public VPC(string _consoleHost, ushort _port, string _name, string _id,
-        Dictionary<string,ushort>[] _ports) : 
+        Dictionary<string,dynamic>[] _ports) : 
         base(_consoleHost, _port, _name, _id, _ports){}
     public VPC(Node father) : base(father){}
 

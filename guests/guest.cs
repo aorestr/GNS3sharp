@@ -7,7 +7,7 @@ public abstract class Guest : Node{
     // Constructors
     public Guest() : base() {}
     public Guest(string _consoleHost, ushort _port, string _name, string _id,
-        Dictionary<string,ushort>[] _ports) : 
+        Dictionary<string,dynamic>[] _ports) : 
         base(_consoleHost, _port, _name, _id, _ports){}
     public Guest(Node clone) : base(clone){}
 

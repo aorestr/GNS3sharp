@@ -9,7 +9,7 @@ public class EthernetSwitch : Switch{
     // Constructors
     public EthernetSwitch() : base() {}
     public EthernetSwitch(string _consoleHost, ushort _port, string _name, string _id,
-        Dictionary<string,ushort>[] _ports) : 
+        Dictionary<string,dynamic>[] _ports) : 
         base(_consoleHost, _port, _name, _id, _ports){}
     public EthernetSwitch(Node father) : base(father){}
 

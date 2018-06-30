@@ -16,8 +16,8 @@ public class Node{
     protected string id; public string ID { get => id; }
 
     // Ports of the node. It contains information about every network interface
-    // (adapterNumber, portNumber, status->(0 if free, 1 if used))
-    protected Dictionary<string,ushort>[] ports; public Dictionary<string,ushort>[] Ports{ get => ports; }
+    // (adapterNumber, portNumber, link->(null if free))
+    protected Dictionary<string,dynamic>[] ports; public Dictionary<string,dynamic>[] Ports{ get => ports; }
 
     // List of links connected to the node
     protected List<Link> linksAttached = new List<Link>();
@@ -37,8 +37,8 @@ public class Node{
 
     // Constructor that sets all the parameters for the node
     public Node(string _consoleHost, ushort _port, string _name, string _id,
-        Dictionary<string,ushort>[] _ports){
-            
+        Dictionary<string,dynamic>[] _ports){
+
         this.consoleHost = _consoleHost; this.port = _port; this.name = _name; this.id = _id;
         this.ports = _ports;
         (this.tcpConnection, this.netStream) = this.Connect();

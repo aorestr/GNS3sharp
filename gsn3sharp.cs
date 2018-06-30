@@ -188,6 +188,54 @@ public class GNS3sharp {
         }
         return dictList;
     }
+    
+    // Save a list in every node with information about the links that are
+    // atrached to them
+    private void SaveLinksInfoInNodes(List<Link> listOfLinks){
+        foreach (Link link in listOfLinks){
+            foreach(Node node in link.Nodes){
+                if(node != null)
+                    node.LinksAttached.Add(link);
+            }
+        }
+    }
+
+    // Given a certain link and its nodes JSON string, add the link into the
+    // correct port of the nodes
+    private void MatchLinkWithNodePorts(Link link, string nodesJSON){
+        
+        List<Dictionary<string,object>> dictList = null;
+        try{
+            dictList = DeserializeJSONList(nodesJSON, "port_number");
+        } catch (Exception err){
+            Console.Error.WriteLine(
+                "Some problem occured while trying to gather information about the nodes connect to the link: {0}",
+                err.Message
+            );
+        }
+
+        if (dictList.Count > 0){
+            // Iterates through the JSON dictionary
+            foreach (Dictionary<string, object> nodeTemp in dictList){
+                // Iterates through the nodes the link connects
+                foreach (Node node in link.Nodes){
+                    if (node != null && node.ID.Equals(nodeTemp["node_id"].ToString())){
+                        // Search for the port that matches the found one
+                        var foundPort = node.Ports.Where(
+                            x => (
+                                x["adapterNumber"].ToString() == nodeTemp["adapter_number"].ToString() &&
+                                x["portNumber"].ToString() == nodeTemp["port_number"].ToString()
+                            )
+                        );
+                        // If exists, add the link into the key "link" of the ports list
+                        // of dictionaries of the node
+                        if (foundPort.Count() > 0) foundPort.First()["link"] = link;
+                    }
+                }
+            }
+        }
+
+    }
 
     // Create an array with the nodes. Each element is a Node instance
     private Node[] GetNodes(List<Dictionary<string,object>> JSON){
@@ -195,8 +243,9 @@ public class GNS3sharp {
         Node[] listOfNodes = new Node[JSON.Count];
 
         // Extract the ports a node has
-        Dictionary<string,ushort>[] GetNodeListOfPorts(Dictionary<string, object> node){
-            List<Dictionary<string,ushort>> ports = new List<Dictionary<string,ushort>>();
+        Dictionary<string,dynamic>[] GetNodeListOfPorts(Dictionary<string, object> node){
+            // Return variable
+            List<Dictionary<string,dynamic>> ports = new List<Dictionary<string,dynamic>>();
 
             try{
                 // Extract a dictionary with the ports defined in the project nodes JSON
@@ -205,10 +254,10 @@ public class GNS3sharp {
                 ).ToArray();
                 foreach(Dictionary<string,object> nodePort in portsRaw){
                     ports.Add(
-                        new Dictionary<string,ushort>(){
+                        new Dictionary<string,dynamic>(){
                             {"adapterNumber", UInt16.Parse(nodePort["adapter_number"].ToString())},
                             {"portNumber", UInt16.Parse(nodePort["port_number"].ToString())},
-                            {"status", 0}
+                            {"link", null}
                         } 
                     );
                 }
@@ -273,7 +322,7 @@ public class GNS3sharp {
                     err.Message
                 );
             }
-            if (dictList.Count != 0){
+            if (dictList.Count > 0){
                 ushort idx = 0;
                 foreach (Dictionary<string, object> node in dictList){
                     try{
@@ -310,15 +359,17 @@ public class GNS3sharp {
             {"projectID", this.projectID}
         };
         try{
+            string nodesJSON;
             foreach(Dictionary<string, object> link in JSON){
                 try{
                     Console.Write($"Gathering information for link #{i}... ");
                     filtersJSON = JObject.Parse(link["filters"].ToString());
+                    nodesJSON = link["nodes"].ToString();
                     if (filtersJSON.HasValues){
                         // If the link has some filter activates
                         listOfLinks.Add(new Link(
                             link["link_id"].ToString(),
-                            GetNodesConnectedByLink(link["nodes"].ToString()),
+                            GetNodesConnectedByLink(nodesJSON),
                             serverInfo, HTTPclient,
                             ExtractFilter(filtersJSON, "frequency_drop"),
                             ExtractFilter(filtersJSON, "packet_loss"),
@@ -330,10 +381,11 @@ public class GNS3sharp {
                         // If don't
                         listOfLinks.Add(new Link(
                             link["link_id"].ToString(),
-                            GetNodesConnectedByLink(link["nodes"].ToString()),
+                            GetNodesConnectedByLink(nodesJSON),
                             serverInfo, HTTPclient
                         ));
                     }
+                    MatchLinkWithNodePorts(listOfLinks.Last(), nodesJSON);
                     i++;
                     Console.WriteLine(" ok");
                 } catch(Exception err1){
@@ -352,17 +404,6 @@ public class GNS3sharp {
         }
 
         return listOfLinks;
-    }
-
-    // Save a list in every node with information about the links that are
-    // atrached to them
-    private void SaveLinksInfoInNodes(List<Link> listOfLinks){
-        foreach (Link link in listOfLinks){
-            foreach(Node node in link.Nodes){
-                if(node != null)
-                    node.LinksAttached.Add(link);
-            }
-        }
     }
 
     // Initialize all the nodes in the project

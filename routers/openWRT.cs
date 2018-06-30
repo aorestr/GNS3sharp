@@ -10,7 +10,7 @@ public class OpenWRT : Router{
     // Constructors
     public OpenWRT() : base() {}
     public OpenWRT(string _consoleHost, ushort _port, string _name, string _id,
-        Dictionary<string,ushort>[] _ports) : 
+        Dictionary<string,dynamic>[] _ports) : 
         base(_consoleHost, _port, _name, _id, _ports){}
     public OpenWRT(Node father) : base(father){}
 

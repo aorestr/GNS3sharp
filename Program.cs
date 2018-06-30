@@ -8,12 +8,13 @@ namespace GNS3_UNITY_API
     class Program {
         static void Main(string[] args) {
             GNS3sharp handler = new GNS3sharp("61261064-a2a4-4666-8f26-d2dbfbbe26a4");
-            Example1(handler);
-            Example1_5(handler);
+            //Example1(handler);
+            //Example1_5(handler);
             //Example2(handler);
             //Example3(handler);
             //Example4();
-            //Example5(handler);
+            Example5(handler);
+            Example1(handler);
         }
        
         // Show every node information
@@ -24,10 +25,10 @@ namespace GNS3_UNITY_API
                 foreach(Link link in n.LinksAttached){
                     Console.Write($", link: {link.ID}");
                 }
-                foreach(Dictionary<string,ushort> port in n.Ports){
+                foreach(Dictionary<string,dynamic> port in n.Ports){
                     Console.Write($",\n\tport, adapter number: {port["adapterNumber"]}");
                     Console.Write($",\n\tport, port number: {port["portNumber"]}");
-                    Console.Write($",\n\tport, status: {port["status"]}");
+                    Console.Write($",\n\tport, link: {port["link"]}");
                 }
                 Console.WriteLine();
             }
@@ -114,11 +115,11 @@ namespace GNS3_UNITY_API
             Console.WriteLine(handler.SetLink(handler.GetNodeByName("[OPENWRT]Lleida"), handler.GetNodeByName("[OPENWRT]Mollerusa"), latency:45));
             Console.WriteLine(
                 handler.EditLink(
-                    handler.GetNodeByName("[OPENWRT]Balaguer"), handler.GetNodeByName("[OPENWRT]Mollerusa"),
-                    latency:9, packetLoss:3, jitter:0, frequencyDrop:74
+                    handler.GetNodeByName("[ETHSW]SW2"), handler.GetNodeByName("[OPENWRT]Mollerusa"),
+                    latency:9, packetLoss:3, jitter:0, frequencyDrop:44
                 )
             );
-            Console.WriteLine(handler.RemoveLink(handler.GetNodeByName("[OPENWRT]Lleida"), handler.GetNodeByName("[OPENWRT]Mollerusa")));
+            Console.WriteLine(handler.RemoveLink(handler.GetNodeByName("[OPENWRT]Balaguer"), handler.GetNodeByName("[OPENWRT]Mollerusa")));
         }
 
     }
