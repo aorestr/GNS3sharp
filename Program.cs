@@ -14,7 +14,6 @@ namespace GNS3_UNITY_API
             //Example3(handler);
             //Example4();
             Example5(handler);
-            Example1(handler);
         }
        
         // Show every node information
@@ -112,15 +111,26 @@ namespace GNS3_UNITY_API
         }
 
         public static void Example5(GNS3sharp handler){
-            Console.WriteLine(handler.SetLink(handler.GetNodeByName("[OPENWRT]Balaguer"), handler.GetNodeByName("[OPENWRT]Mollerusa"), latency:45));
+            Console.WriteLine(
+                handler.SetLink(handler.GetNodeByName("[OPENWRT]Balaguer"),
+                handler.GetNodeByName("[OPENWRT]Mollerusa"), latency:45)
+            );
+            Console.WriteLine(
+                handler.SetLink(handler.GetNodeByName("[OPENWRT]Mollerusa"),
+                handler.GetNodeByName("[ETHSW]SW2"), latency:45)
+            );
+            Console.WriteLine(
+                handler.SetLink(handler.GetNodeByName("[OPENWRT]Lleida"),
+                handler.GetNodeByName("[ETHSW]SW1"), latency:45)
+            );
             Console.WriteLine(
                 handler.EditLink(
                     handler.GetNodeByName("[ETHSW]SW2"), handler.GetNodeByName("[OPENWRT]Mollerusa"),
                     latency:9, packetLoss:3, jitter:0, frequencyDrop:44
                 )
             );
-            Console.WriteLine(handler.RemoveLink(handler.GetNodeByName("[OPENWRT]Mollerusa"), handler.GetNodeByName("[ETHSW]SW2")));
-            Console.WriteLine(handler.RemoveLink(handler.GetNodeByName("[OPENWRT]Mollerusa"), handler.GetNodeByName("[OPENWRT]Balaguer")));
+            //Console.WriteLine(handler.RemoveLink(handler.GetNodeByName("[OPENWRT]Mollerusa"), handler.GetNodeByName("[ETHSW]SW2")));
+            //Console.WriteLine(handler.RemoveLink(handler.GetNodeByName("[OPENWRT]Mollerusa"), handler.GetNodeByName("[OPENWRT]Balaguer")));
         }
 
     }

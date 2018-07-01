@@ -461,7 +461,8 @@ public class GNS3sharp {
         return totalMessages;
     }
 
-    // Create a new link
+    // Create a new link. Needs the nodes the link will attach. It takes a free port
+    // of each one automatically
     public bool SetLink(Node node1, Node node2, 
         int frequencyDrop=0, int packetLoss=0,
         int latency=0, int jitter=0, int corrupt=0){
@@ -490,81 +491,96 @@ public class GNS3sharp {
                 return newID;
             }
 
-            Dictionary<string, dynamic>[] nodesInfo = new Dictionary<string, dynamic>[]{
-                new Dictionary<string, dynamic>(){
-                    {"adapter_number", 2}, {"node_id", $"{node1.ID}"}, {"port_number", 0}
-                },
-                new Dictionary<string, dynamic>(){
-                    {"adapter_number", 1}, {"node_id", $"{node2.ID}"}, {"port_number", 0}
-                }
-            };
-            Dictionary<string, int[]> filtersInfo = new Dictionary<string, int[]>{
-                {"frequency_drop", new int[1]{frequencyDrop}}, {"packet_loss", new int[1]{packetLoss}},
-                {"delay", new int[2]{latency,jitter}}, {"corrupt", new int[1]{corrupt}}
-            };
+            var freePort1 = node1.Ports.Where( x => (x["link"] == null) );
+            var freePort2 = node2.Ports.Where( x => (x["link"] == null) );
+            if (freePort1.Count() > 0 && freePort2.Count() > 0){
+                // Free ports map
+                Dictionary<string, dynamic>[] chosenPorts =  new Dictionary<string, dynamic>[2]{
+                    freePort1.First(), freePort2.First()
+                };
+                // Dictionary for the JSON message which contains the nodes info
+                Dictionary<string, dynamic>[] nodesInfo = new Dictionary<string, dynamic>[2]{
+                    new Dictionary<string, dynamic>(){
+                        {"adapter_number", chosenPorts[0]["adapterNumber"]},
+                        {"node_id", $"{node1.ID}"}, {"port_number", chosenPorts[0]["portNumber"]}
+                    },
+                    new Dictionary<string, dynamic>(){
+                        {"adapter_number", chosenPorts[1]["adapterNumber"]},
+                        {"node_id", $"{node2.ID}"}, {"port_number", chosenPorts[1]["portNumber"]}
+                    }
+                };
+                // Dictionary for the JSON message which contains the filters info
+                Dictionary<string, int[]> filtersInfo = new Dictionary<string, int[]>{
+                    {"frequency_drop", new int[1]{frequencyDrop}}, {"packet_loss", new int[1]{packetLoss}},
+                    {"delay", new int[2]{latency,jitter}}, {"corrupt", new int[1]{corrupt}}
+                };
 
-            try{
+                try{
 
-                // Pack the content we will send
-                string content = JsonConvert.SerializeObject(new Dictionary<string, dynamic> { 
-                    { "nodes", nodesInfo }, { "filters" , filtersInfo }
-                });
-                ByteArrayContent byteContent = new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(content));
-                byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                // Send it. It returns a string with the info about the link
-                var res = HTTPclient.PostAsync(
-                    $"{URL}", byteContent
-                ).Result;
-                if (!res.IsSuccessStatusCode){
-                    Console.Error.WriteLine("Impossible to create the link: the status of the response is not success");
-                    linkCreated = false;
-                } else{
-                    string responseString = res.Content.ReadAsStringAsync().Result.ToString();
-                    // Extract the ID from the new link created
-                    string newID = ExtractKeyNewLink(responseString, "link_id").ToString();
-
-                    if (newID == null){
-                        Console.Error.WriteLine("Impossible to create the link: impossible to get its ID");
+                    // Pack the content we will send
+                    string content = JsonConvert.SerializeObject(new Dictionary<string, dynamic> { 
+                        { "nodes", nodesInfo }, { "filters" , filtersInfo }
+                    });
+                    ByteArrayContent byteContent = new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(content));
+                    byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                    // Send it. It returns a string with the info about the link
+                    var res = HTTPclient.PostAsync(
+                        $"{URL}", byteContent
+                    ).Result;
+                    if (!res.IsSuccessStatusCode){
+                        Console.Error.WriteLine("Impossible to create the link: the status of the response is not success");
                         linkCreated = false;
                     } else{
-                        Dictionary<string, string> serverInfo = new Dictionary<string, string>(){
-                            {"host", this.host}, {"port", this.port.ToString()},
-                            {"projectID", this.projectID},
-                        };
-                        // Adds the new link to our list
-                        Link newLink = new Link(
-                            newID,
-                            new Node[2]{node1, node2},
-                            serverInfo, HTTPclient,
-                            frequencyDrop,
-                            packetLoss,
-                            latency,
-                            jitter,
-                            corrupt
-                        );
-                        // Add the new link to the project list of links
-                        links.Add(newLink);
-                        // Add the new link to each node list of links
-                        SaveLinksInfoInNodes(new List<Link>(){newLink});
-                        // And then match the nodes ports
-                        MatchLinkWithNodePorts(newLink, ExtractKeyNewLink(responseString, "nodes").ToString());
-                        linkCreated = true;
+                        string responseString = res.Content.ReadAsStringAsync().Result.ToString();
+                        // Extract the ID from the new link created
+                        string newID = ExtractKeyNewLink(responseString, "link_id").ToString();
+
+                        if (newID == null){
+                            Console.Error.WriteLine("Impossible to create the link: impossible to get its ID");
+                            linkCreated = false;
+                        } else{
+                            Dictionary<string, string> serverInfo = new Dictionary<string, string>(){
+                                {"host", this.host}, {"port", this.port.ToString()},
+                                {"projectID", this.projectID},
+                            };
+                            // Adds the new link to our list
+                            Link newLink = new Link(
+                                newID,
+                                new Node[2]{node1, node2},
+                                serverInfo, HTTPclient,
+                                frequencyDrop,
+                                packetLoss,
+                                latency,
+                                jitter,
+                                corrupt
+                            );
+                            // Add the new link to the project list of links
+                            links.Add(newLink);
+                            // Add the new link to each node list of links
+                            SaveLinksInfoInNodes(new List<Link>(){newLink});
+                            // And then match the nodes ports
+                            MatchLinkWithNodePorts(newLink, ExtractKeyNewLink(responseString, "nodes").ToString());
+                            linkCreated = true;
+                        }
                     }
+                } catch(JsonSerializationException err){
+                    Console.Error.WriteLine("Impossible to serialize the JSON to send it to the API: {0}", err.Message);
+                    linkCreated = false;
+                } catch(HttpRequestException err){
+                    Console.Error.WriteLine("Some problem occured with the HTTP connection: {0}", err.Message);
+                    linkCreated = false;
+                } catch(Exception err){
+                    Console.Error.WriteLine("Impossible to create the link: {0}", err.Message);
+                    linkCreated = false;
                 }
-            } catch(JsonSerializationException err){
-                Console.Error.WriteLine("Impossible to serialize the JSON to send it to the API: {0}", err.Message);
-                linkCreated = false;
-            } catch(HttpRequestException err){
-                Console.Error.WriteLine("Some problem occured with the HTTP connection: {0}", err.Message);
-                linkCreated = false;
-            } catch(Exception err){
-                Console.Error.WriteLine("Impossible to create the link: {0}", err.Message);
+            } else {
+                Console.Error.WriteLine("Some of the chosen nodes has not any free port");
                 linkCreated = false;
             }
         } else{
             Console.Error.WriteLine("Some of the chosen nodes doesn't exist");
             linkCreated = false;
-        }        
+        }
 
         return linkCreated;
     }
