@@ -8,7 +8,7 @@ namespace GNS3_UNITY_API
     class Program {
         static void Main(string[] args) {
             GNS3sharp handler = new GNS3sharp("61261064-a2a4-4666-8f26-d2dbfbbe26a4");
-            //Example1(handler);
+            Example1(handler);
             //Example1_5(handler);
             //Example2(handler);
             //Example3(handler);
@@ -112,14 +112,15 @@ namespace GNS3_UNITY_API
         }
 
         public static void Example5(GNS3sharp handler){
-            Console.WriteLine(handler.SetLink(handler.GetNodeByName("[OPENWRT]Lleida"), handler.GetNodeByName("[OPENWRT]Mollerusa"), latency:45));
+            Console.WriteLine(handler.SetLink(handler.GetNodeByName("[OPENWRT]Balaguer"), handler.GetNodeByName("[OPENWRT]Mollerusa"), latency:45));
             Console.WriteLine(
                 handler.EditLink(
                     handler.GetNodeByName("[ETHSW]SW2"), handler.GetNodeByName("[OPENWRT]Mollerusa"),
                     latency:9, packetLoss:3, jitter:0, frequencyDrop:44
                 )
             );
-            Console.WriteLine(handler.RemoveLink(handler.GetNodeByName("[OPENWRT]Balaguer"), handler.GetNodeByName("[OPENWRT]Mollerusa")));
+            Console.WriteLine(handler.RemoveLink(handler.GetNodeByName("[OPENWRT]Mollerusa"), handler.GetNodeByName("[ETHSW]SW2")));
+            Console.WriteLine(handler.RemoveLink(handler.GetNodeByName("[OPENWRT]Mollerusa"), handler.GetNodeByName("[OPENWRT]Balaguer")));
         }
 
     }

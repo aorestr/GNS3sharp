@@ -471,17 +471,17 @@ public class GNS3sharp {
             // URL where send the data
             string URL = ($"http://{host}:{port}/v2/projects/{projectID}/links");
 
-            // Get the ID assigned by GNS3 of the new link
-            string ExtractIDNewLink(string JSONLink){
+            // Get a certain key of the new link
+            object ExtractKeyNewLink(string JSONLink, string key){
                 // Return variable
-                string newID = null;
+                object newID = null;
 
                 // Parse the JSON string into an object
                 JObject jO = JObject.Parse(JSONLink);      
                 if (jO.HasValues){
                     foreach (JProperty jP in jO.Properties()) {                
-                        if (jP.Name.ToString().Equals("link_id")){
-                            newID = (string)jP.Value;
+                        if (jP.Name.ToString().Equals(key)){
+                            newID = (object)jP.Value;
                             break;
                         }
                     }
@@ -492,10 +492,10 @@ public class GNS3sharp {
 
             Dictionary<string, dynamic>[] nodesInfo = new Dictionary<string, dynamic>[]{
                 new Dictionary<string, dynamic>(){
-                    {"adapter_number", 1}, {"node_id", $"{node1.ID}"}, {"port_number", 0}
+                    {"adapter_number", 2}, {"node_id", $"{node1.ID}"}, {"port_number", 0}
                 },
                 new Dictionary<string, dynamic>(){
-                    {"adapter_number", 2}, {"node_id", $"{node2.ID}"}, {"port_number", 0}
+                    {"adapter_number", 1}, {"node_id", $"{node2.ID}"}, {"port_number", 0}
                 }
             };
             Dictionary<string, int[]> filtersInfo = new Dictionary<string, int[]>{
@@ -521,7 +521,7 @@ public class GNS3sharp {
                 } else{
                     string responseString = res.Content.ReadAsStringAsync().Result.ToString();
                     // Extract the ID from the new link created
-                    string newID = ExtractIDNewLink(responseString);
+                    string newID = ExtractKeyNewLink(responseString, "link_id").ToString();
 
                     if (newID == null){
                         Console.Error.WriteLine("Impossible to create the link: impossible to get its ID");
@@ -546,6 +546,8 @@ public class GNS3sharp {
                         links.Add(newLink);
                         // Add the new link to each node list of links
                         SaveLinksInfoInNodes(new List<Link>(){newLink});
+                        // And then match the nodes ports
+                        MatchLinkWithNodePorts(newLink, ExtractKeyNewLink(responseString, "nodes").ToString());
                         linkCreated = true;
                     }
                 }
@@ -646,7 +648,10 @@ public class GNS3sharp {
             try{
 
                 if (HTTPclient.DeleteAsync($"{URLHeader}/{link.ID}").Result.IsSuccessStatusCode){
-                    foreach(Node node in link.Nodes) node.LinksAttached.Remove(link);
+                    foreach(Node node in link.Nodes){
+                        node.LinksAttached.Remove(link);
+                        node.Ports.Single( x => x["link"] == link )["link"] = null;
+                    }
                     this.links.Remove(link); link = null;
                     linkRemoved = true;
                 } else{
