@@ -407,58 +407,87 @@ public class GNS3sharp {
     }
 
     // Initialize all the nodes in the project
-    public string[] StartProject(){
+    public bool[] StartProject(){
         return ChangeProjectStatus("start");
     }
 
     // Stop all the nodes in the project
-    public string[] StopProject(){
+    public bool[] StopProject(){
         return ChangeProjectStatus("stop");
     }
 
     // Change the status of the project (start or stop)
-    private string[] ChangeProjectStatus(string status){
-        
-        // First part of the URL
-        string URLHeader = $"http://{host}:{port}/v2/projects/{projectID}/nodes";
+    private bool[] ChangeProjectStatus(string status){
 
         // String with all the messages received
         int numNodes = nodes.Length;
-        string[] totalMessages = new string[numNodes];
-
-        // Pack the content we will send
-        ByteArrayContent byteContent = null;
-        try{
-            string content = JsonConvert.SerializeObject(new Dictionary<string, string> { { "", "" } });
-            byteContent = new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(content));
-            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-        } catch(JsonSerializationException err){
-            Console.Error.WriteLine("Impossible to serialize the JSON to send it to the API: {0}", err.Message);
-        } 
+        bool[] changeOK = new bool[numNodes];
 
         if (status.Equals("start"))
             Console.WriteLine("Activating all the nodes in the project...");
         else
             Console.WriteLine("Deactivating all the nodes in the project...");
-
-        if (byteContent != null){
-            for (ushort i = 0; i < numNodes; i++){
-                try{
-                    var res = HTTPclient.PostAsync(
-                        $"{URLHeader}/{nodes[i].ID}/{status}", byteContent
-                    ).Result.Content.ReadAsStringAsync();
-                    totalMessages[i] = res.Result.ToString();
-                } catch(HttpRequestException err){
-                    Console.Error.WriteLine("Some problem occured with the HTTP connection: {0}", err.Message);
-                } catch(Exception err){
-                    Console.Error.WriteLine("Impossible to {2} node {0}: {1}", nodes[i].Name, err.Message, status);
-                }
-            }
-            Console.WriteLine("...ok");
+        for (ushort i = 0; i < numNodes; i++){
+            ChangeNodeStatus(nodes[i],status);
         }
+        Console.WriteLine("...ok");
 
         // If everything goes right, it returns info about every node
-        return totalMessages;
+        return changeOK;
+    }
+
+    // Initialize a single node
+    public bool StartNode(Node node){
+        return ChangeNodeStatus(node, "start");
+    }
+
+    // Stop a single node
+    public bool StopNode(Node node){
+        return ChangeNodeStatus(node, "stop");
+    }
+
+    // Change a single node status
+    private bool ChangeNodeStatus(Node node, string status){
+        // Return variable
+        bool responseStatus;
+
+        if (node != null){
+
+            // First part of the URL
+            string URLHeader = $"http://{host}:{port}/v2/projects/{projectID}/nodes";
+
+            // Pack the content we will send
+            ByteArrayContent byteContent = null;
+            try{
+                string content = JsonConvert.SerializeObject(new Dictionary<string, string> { { "", "" } });
+                byteContent = new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(content));
+                byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            } catch(JsonSerializationException err){
+                Console.Error.WriteLine("Impossible to serialize the JSON to send it to the API: {0}", err.Message);
+            }
+
+            if (byteContent != null){
+                try{
+                    responseStatus = HTTPclient.PostAsync(
+                        $"{URLHeader}/{node.ID}/{status}", byteContent
+                    ).Result.IsSuccessStatusCode;
+                } catch(HttpRequestException err){
+                    Console.Error.WriteLine("Some problem occured with the HTTP connection: {0}", err.Message);
+                    responseStatus = false;
+                } catch(Exception err){
+                    Console.Error.WriteLine("Impossible to {2} node {0}: {1}", node.Name, err.Message, status);
+                    responseStatus = false;
+                }
+            } else{
+                responseStatus = false;
+            }
+        } else {
+            Console.Error.WriteLine("Impossible to {1} node {0}: the node is null", node.Name, status);
+            responseStatus = false;
+        }
+
+        return responseStatus;
+
     }
 
     // Create a new link. Needs the nodes the link will attach. It takes a free port

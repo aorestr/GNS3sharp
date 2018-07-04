@@ -92,5 +92,5 @@ handler.RemoveLink(
 
 ## Limitations ##
 * As you might already noticed, this tool can not create a GNS3 project from scratch. It's more like a tool for handling already created projects.
-* Unlike the links, nodes can not be add or remove from the project. You can configure them as much as you want but always through its terminal.
+* Unlike the links, nodes can not be added or removed from the project. You can configure them as much as you want but always through its terminal.
 * This API relies totally on GNS3 server. It can not work without it running, which means you need to open it always first.
