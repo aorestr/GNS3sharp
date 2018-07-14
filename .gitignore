@@ -2,6 +2,9 @@
 .vscode/
 
 # .NET project folders #
-GNS3-UNITY_API.csproj
+GNS3sharp.csproj
 bin/
 obj/
+
+# Test program
+Program.cs
