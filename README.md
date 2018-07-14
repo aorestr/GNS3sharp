@@ -1,4 +1,4 @@
-# GNS3-Unity #
+# GNS3sharp #
 This work was born as a need for my end-of-studies project. Since its purpose is basically integrate a network simulator ([**GNS3**](https://www.gns3.com/)) in a game engine ([**Unity**](https://unity3d.com)), I needed an API between the two parts of the project in order to make things easier. Of course, the API offers much more possibilities and it's up to you find new, more imaginative uses!
 
 **Unity** works with **C#** so the API has been made entirely in this language. The way it is made, how to make it work and what can do will be explained later on.
