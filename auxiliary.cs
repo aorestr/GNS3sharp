@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 
 namespace GNS3sharp {
@@ -11,9 +10,9 @@ namespace GNS3sharp {
     public static class Aux{
 
         // This array of dictionaries contains the different classes of nodes and
-        // their 'label's. The 'label's are the strings you must between brackets
+        // their 'label's. The 'label's are the strings you must place between brackets
         // in the node name in the GNS3 project
-        public static ImmutableArray<Dictionary<string,object>> nodesAvailables = ImmutableArray.Create(
+        public static Dictionary<string,object>[] nodesAvailables = {
             new Dictionary<string,object>(){
                 {"class", typeof(VPC)}, {"label", VPC.label}
             },
@@ -29,7 +28,7 @@ namespace GNS3sharp {
             new Dictionary<string,object>(){
                 {"class", typeof(OpenWRT)}, {"label", OpenWRT.label}
             }
-        );
+        };
 
         // It returns the right class type for every node
         public static Type NodeType(string nodeName){

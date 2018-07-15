@@ -72,22 +72,26 @@ namespace GNS3sharp {
             // Extract that info
             Console.Write($"Extracting nodes information from URL: {baseURL}/nodes... ");
             ExtractNodesDictionary($"{baseURL}/nodes");
-            Console.WriteLine(" ok");
             Console.Write($"Extracting links information from URL: {baseURL}/links... ");
             ExtractLinksDictionary($"{baseURL}/links");
-            Console.WriteLine(" ok");
-            if (nodesJSON != null){
+            if (this.nodesJSON != null && this.linksJSON != null){
                 // Create the nodes related to that info
                 nodes = GetNodes(nodesJSON);
                 links = GetLinks(linksJSON);
-            }
-            try{
-                SaveLinksInfoInNodes(links);
-            } catch(Exception err){
+                try{
+                    SaveLinksInfoInNodes(links);
+                } catch(Exception err){
+                    Console.Error.WriteLine(
+                        $"Ups, something went wrong. Unable to save the link info in the nodes: {err}"
+                    );
+                }
+            } else{
                 Console.Error.WriteLine(
-                    $"Ups, something went wrong. Unable to save the link info in the nodes: {err}"
+                    "Information about the nodes or the links couldn't be reached. The instance will be " +
+                    "unusable"
                 );
             }
+            
         }
 
         ///////////////////////////////// Methods ////////////////////////////////////////////
@@ -271,7 +275,6 @@ namespace GNS3sharp {
                         nodesByName.Add(listOfNodes[i].Name, listOfNodes[i]);
                         nodesByID.Add(listOfNodes[i].ID, listOfNodes[i]);
                         i++;
-                        Console.WriteLine(" ok");
                     } catch(Exception err1){
                         Console.Error.WriteLine(
                             "Impossible to save the configuration for the node #{0}: {1}", 
@@ -372,7 +375,6 @@ namespace GNS3sharp {
                         }
                         MatchLinkWithNodePorts(listOfLinks.Last(), nodesJSON);
                         i++;
-                        Console.WriteLine(" ok");
                     } catch(Exception err1){
                         Console.Error.WriteLine(
                             $"Impossible to save the configuration for the link #{0}: {1}", 
@@ -415,7 +417,6 @@ namespace GNS3sharp {
             for (ushort i = 0; i < numNodes; i++){
                 ChangeNodeStatus(nodes[i],status);
             }
-            Console.WriteLine("...ok");
 
             // If everything goes right, it returns info about every node
             return changeOK;
