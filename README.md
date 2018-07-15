@@ -4,9 +4,11 @@ This work was born as a need for my end-of-studies project. Since its purpose is
 **Unity** works with **C#** so the API has been made entirely in this language. The way it is made, how to make it work and what can do will be explained later on.
 
 ## Installation ##
-// Esto habrá que rellenarlo al final.
+You can either place the source code on your project or import one of the .dll's you may find at the '[Release](https://github.com/aorestr/GNS3sharp/releases)' space in this repository as a reference. Just keep in mind that the library depends on [Json.NET](https://www.newtonsoft.com/json) in both cases, so you will need to install it in order to make it work.
 
-Firstly, you will need [Json.NET](https://www.newtonsoft.com/json) in your system. It's an open-source framework headed to help .NET with JSON.
+In case you want to compile the code as a **.NET Standard** library by yourself, besides Json.NET you will need to include [Microsoft.CSharp](https://www.nuget.org/packages/Microsoft.CSharp/) in your project.
+
+If you have any problem with the ``HTTPClient`` class, it can be solved including the [System.Net.HTTP](https://www.nuget.org/packages/System.Net.Http/) .dll in your project, but it shouldn't be necessary.
 
 ## First steps ##
 Once the library is imported into your project and you have **GNS3** running, you can create a new instance of the handler class. The constructor needs at least the ID of the project you want to handle. You can also add the server and port your **GNS3** uses as a server. By default *``host`` = "localhost"* and *``port`` = 3080*:
@@ -15,7 +17,7 @@ Once the library is imported into your project and you have **GNS3** running, yo
 GNS3sharp handler = new GNS3sharp("b4a4f44d-0f62-4435-89e0-84c8c7a2b35f", "localhost", 3080);
 ```
 
-Ok, so now you have plenty of information and tools within this variable. It contains a list with all the nodes contained in your project. You can access this list with the property ``Nodes``
+Ok, so now you have plenty of information and tools within this variable. It contains a list with all the nodes contained in your project. You can access this list with the property ``Nodes``:
 
 ```csharp
 foreach(Node n in handler.Nodes){
