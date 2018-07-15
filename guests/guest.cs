@@ -15,7 +15,7 @@ namespace GNS3sharp {
         abstract public string[] SetIP(string IP, string netmask, ushort adapter_number, string gateway);
 
         // Send ping to a certain IP
-        virtual public (string[], bool reached) Ping(string IP){
+        virtual public string[] Ping(string IP){
 
             // Reception variable as a string
             string[] in_txt = null;
@@ -27,16 +27,8 @@ namespace GNS3sharp {
                 Console.Error.WriteLine($"{IP} is not a valid IP");
             }
 
-            /*
-            ///////////////
-            TO DO
-            */
-            // Check if the ping went right
-            bool reached = false;
-            //////////////
-
             // Return the response
-            return (in_txt, reached);
+            return in_txt;
 
         }
     }

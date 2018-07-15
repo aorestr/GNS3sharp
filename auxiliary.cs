@@ -31,7 +31,7 @@ namespace GNS3sharp {
         };
 
         // It returns the right class type for every node
-        public static Type NodeType(string nodeName){
+        internal static Type NodeType(string nodeName){
 
             // If something goes wrong and the label is not properly set on the
             // name, it returns the generic Node class
@@ -51,15 +51,15 @@ namespace GNS3sharp {
         }
 
         // Guess whether a string is an IP or not
-        public static bool IsIP(string IP) => 
+        internal static bool IsIP(string IP) => 
             Regex.IsMatch(IP, @"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$");
 
         // Guess whether a string is a netmask or not
-        public static bool IsNetmask(string netmask) =>
+        internal static bool IsNetmask(string netmask) =>
             Regex.IsMatch(netmask, @"^(((255\.){3}(255|254|252|248|240|224|192|128|0+))|((255\.){2}(255|254|252|248|240|224|192|128|0+)\.0)|((255\.)(255|254|252|248|240|224|192|128|0+)(\.0+){2})|((255|254|252|248|240|224|192|128|0+)(\.0+){3}))$");
         
         // Convert a mask written by numbers and dots into its CIDR notation
-        public static short NetmaskCIDR(string netmaskDecimals){
+        internal static short NetmaskCIDR(string netmaskDecimals){
             short result = 0;
 
             if (Aux.IsNetmask(netmaskDecimals)){

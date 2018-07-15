@@ -17,6 +17,8 @@ Once the library is imported into your project and you have **GNS3** running, yo
 GNS3sharp handler = new GNS3sharp("b4a4f44d-0f62-4435-89e0-84c8c7a2b35f", "localhost", 3080);
 ```
 
+If you do not know the ID of the project you plan to game with but you know its name, you can use ``ServerProjects.GetProjectIDByName()``.
+
 Ok, so now you have plenty of information and tools within this variable. It contains a list with all the nodes contained in your project. You can access this list with the property ``Nodes``:
 
 ```csharp

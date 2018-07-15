@@ -70,9 +70,9 @@ namespace GNS3sharp {
             // Defines the URL where the info is
             string baseURL = $"http://{_host}:{_port.ToString()}/v2/projects/{_projectID}";
             // Extract that info
-            Console.Write($"Extracting nodes information from URL: {baseURL}/nodes... ");
+            Console.WriteLine($"Extracting nodes information from URL: {baseURL}/nodes... ");
             ExtractNodesDictionary($"{baseURL}/nodes");
-            Console.Write($"Extracting links information from URL: {baseURL}/links... ");
+            Console.WriteLine($"Extracting links information from URL: {baseURL}/links... ");
             ExtractLinksDictionary($"{baseURL}/links");
             if (this.nodesJSON != null && this.linksJSON != null){
                 // Create the nodes related to that info
@@ -107,7 +107,7 @@ namespace GNS3sharp {
         }
 
         // It returns a dictionary with information about the nodes of the project
-        private static List<Dictionary<string,object>> ExtractDictionary(string URL, string lastElement){
+        internal static List<Dictionary<string,object>> ExtractDictionary(string URL, string lastElement){
             
             // Extract a JSON from a GET request
             string ExtractJSONString(string local_URL){
@@ -261,7 +261,7 @@ namespace GNS3sharp {
             try{
                 foreach(Dictionary<string, object> node in JSON){
                     try{
-                        Console.Write($"Gathering information for node #{i}... ");
+                        Console.WriteLine($"Gathering information for node #{i}... ");
                         // Assign a class or another depending on the node
                         classType = Aux.NodeType(node["name"].ToString());
                         listOfNodes[i] = (Node)Activator.CreateInstance(
@@ -350,7 +350,7 @@ namespace GNS3sharp {
                 string nodesJSON;
                 foreach(Dictionary<string, object> link in JSON){
                     try{
-                        Console.Write($"Gathering information for link #{i}... ");
+                        Console.WriteLine($"Gathering information for link #{i}... ");
                         filtersJSON = JObject.Parse(link["filters"].ToString());
                         nodesJSON = link["nodes"].ToString();
                         if (filtersJSON.HasValues){
