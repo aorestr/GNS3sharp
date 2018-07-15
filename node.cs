@@ -10,22 +10,22 @@ using System.Threading;
 namespace GNS3sharp {
     public class Node{
         // Node attributes
-        protected string consoleHost; public string ConsoleHost { get => consoleHost; }
-        protected ushort port; public ushort Port { get => port; }
-        protected string name; public string Name { get => name; }
-        protected string id; public string ID { get => id; }
+        protected string consoleHost; public string ConsoleHost { get { return consoleHost; } }
+        protected ushort port; public ushort Port { get { return port; } }
+        protected string name; public string Name { get { return name; } }
+        protected string id; public string ID { get { return id; } }
 
         // Ports of the node. It contains information about every network interface
         // (adapterNumber, portNumber, link->(null if free))
-        protected Dictionary<string,dynamic>[] ports; public Dictionary<string,dynamic>[] Ports{ get => ports; }
+        protected Dictionary<string,dynamic>[] ports; public Dictionary<string,dynamic>[] Ports{ get { return ports; } }
 
         // List of links connected to the node
         protected List<Link> linksAttached = new List<Link>();
-        public List<Link> LinksAttached { get => linksAttached; }
+        public List<Link> LinksAttached { get { return linksAttached; } }
 
         // Connection properties
-        protected TcpClient tcpConnection; public TcpClient TCPConnection { get => tcpConnection; }
-        protected NetworkStream netStream; public NetworkStream NetStream { get => netStream; }
+        protected TcpClient tcpConnection; public TcpClient TCPConnection { get { return tcpConnection; } }
+        protected NetworkStream netStream; public NetworkStream NetStream { get { return netStream; } }
 
         ///////////////////////////// Constructors ////////////////////////////////////////////
 
@@ -41,7 +41,9 @@ namespace GNS3sharp {
 
             this.consoleHost = _consoleHost; this.port = _port; this.name = _name; this.id = _id;
             this.ports = _ports;
-            (this.tcpConnection, this.netStream) = this.Connect();
+            Dictionary<string,dynamic> tempConnectionParameters= this.Connect();
+            tempConnectionParameters["tcpConnection"] = this.tcpConnection;
+            tempConnectionParameters["netStream"] = this.netStream;
         }
 
         // In case we want to clone the instance
@@ -66,7 +68,7 @@ namespace GNS3sharp {
         ///////////////////////////////// Methods ////////////////////////////////////////////
 
         // Stablish a TCP connection with the node
-        protected (TcpClient Connection, NetworkStream Stream) Connect(int timeout = 10000){
+        protected Dictionary<string,dynamic> Connect(int timeout = 10000){
             // Network endpoint as an IP address and a port number
             IPEndPoint address = new IPEndPoint(IPAddress.Parse(this.consoleHost),this.port);
             // Set the socket for the connection
@@ -81,14 +83,20 @@ namespace GNS3sharp {
                 Console.Error.WriteLine("Impossible to connect to the node {0}: {1}", this.name, err.Message);
                 newConnection = null;
             }
-            return (newConnection, newStream);
+
+            return new Dictionary<string,dynamic>(){
+                {"newConnection",newConnection}, {"newStream",newStream}
+            };
         }
 
         // Send a message we choose as a parameter to the node
         public void Send(string message){
-
+            
+            Dictionary<string,dynamic> tempConnectionParameters = null;
             if (this.tcpConnection == null)
-                (this.tcpConnection, this.netStream) = this.Connect();
+                tempConnectionParameters = this.Connect();
+                tempConnectionParameters["tcpConnection"] = this.tcpConnection;
+                tempConnectionParameters["netStream"] = this.netStream;
             if (this.tcpConnection != null && this.netStream.CanWrite){
                 try{
                     // We need to convert the string into a bytes array first
@@ -119,8 +127,11 @@ namespace GNS3sharp {
             // Reception variable as a string split by \n
             string[] in_txt_split = null;
 
-            if (this.tcpConnection != null)
-                (this.tcpConnection, this.netStream) = this.Connect();
+            Dictionary<string,dynamic> tempConnectionParameters = null;
+            if (this.tcpConnection == null)
+                tempConnectionParameters = this.Connect();
+                tempConnectionParameters["tcpConnection"] = this.tcpConnection;
+                tempConnectionParameters["netStream"] = this.netStream;
             if (this.netStream.CanRead){
                 // Reception variable as a bytes array
                 byte[] in_bytes = new byte[tcpConnection.ReceiveBufferSize];

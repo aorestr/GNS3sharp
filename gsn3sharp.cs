@@ -14,13 +14,13 @@ namespace GNS3sharp {
     public class GNS3sharp {
 
         // Project ID
-        private string projectID; public string ProjectID{ get => projectID; }
+        private string projectID; public string ProjectID{ get { return projectID; } }
 
         // GNS3 server host
-        private string host; public string Host{ get => host; }
+        private string host; public string Host{ get { return host; } }
 
         // GNS3 server port
-        private ushort port; public ushort Port{ get => port; }
+        private ushort port; public ushort Port{ get { return port; } }
 
         // List of nodes inside the project with all the info about them.
         // The info is not filtered
@@ -46,10 +46,10 @@ namespace GNS3sharp {
         }
 
         // List of nodes the project has
-        private Node[] nodes; public Node[] Nodes{ get => nodes; }
+        private Node[] nodes; public Node[] Nodes{ get { return nodes; } }
 
         // List of links the project has. We will use a struct
-        private List<Link> links; public List<Link> Links{ get => links; }
+        private List<Link> links; public List<Link> Links{ get { return links; } }
 
         // These dictionaries will help getting the nodes by name and ID
         private Dictionary<string, Node> nodesByName = new Dictionary<string, Node>();
@@ -61,7 +61,7 @@ namespace GNS3sharp {
         ///////////////////////////// Constructors ////////////////////////////////////////////
 
         // Wrong constructor. It needs an ID for the project
-        public GNS3sharp() => Console.Error.WriteLine("You need the project ID");
+        public GNS3sharp() { Console.Error.WriteLine("You need the project ID"); }
 
         // Right constructor. Needs the project ID. Just get the nodes
         // the project has
@@ -70,9 +70,9 @@ namespace GNS3sharp {
             // Defines the URL where the info is
             string baseURL = $"http://{_host}:{_port.ToString()}/v2/projects/{_projectID}";
             // Extract that info
-            Console.Write($"Extracting nodes information from URL: {baseURL}/nodes... ");
+            Console.WriteLine($"Extracting nodes information from URL: {baseURL}/nodes... ");
             ExtractNodesDictionary($"{baseURL}/nodes");
-            Console.Write($"Extracting links information from URL: {baseURL}/links... ");
+            Console.WriteLine($"Extracting links information from URL: {baseURL}/links... ");
             ExtractLinksDictionary($"{baseURL}/links");
             if (this.nodesJSON != null && this.linksJSON != null){
                 // Create the nodes related to that info
@@ -108,24 +108,6 @@ namespace GNS3sharp {
 
         // It returns a dictionary with information about the nodes of the project
         private static List<Dictionary<string,object>> ExtractDictionary(string URL, string lastElement){
-            
-            // Extract a JSON from a GET request
-            string ExtractJSONString(string local_URL){
-                // Variable with a string with all the JSON info
-                string local_json;
-                try{
-                    // Get the info from the JSON file you can access from the GNS3 Rest service
-                    using (System.Net.WebClient GNS3NodesProject = new System.Net.WebClient()){
-                        local_json = GNS3NodesProject.DownloadString(local_URL);
-                    }
-                } catch(Exception err){
-                    // Server not open
-                    Console.Error.WriteLine("Impossible to connect to URL {0}: {1}", local_URL, err.Message);
-                    local_json = null;
-                }
-
-                return local_json;
-            }
 
             // Raw string
             string json = ExtractJSONString(URL);
@@ -231,37 +213,11 @@ namespace GNS3sharp {
             // Return variable
             Node[] listOfNodes = new Node[JSON.Count];
 
-            // Extract the ports a node has
-            Dictionary<string,dynamic>[] GetNodeListOfPorts(Dictionary<string, object> node){
-                // Return variable
-                List<Dictionary<string,dynamic>> ports = new List<Dictionary<string,dynamic>>();
-
-                try{
-                    // Extract a dictionary with the ports defined in the project nodes JSON
-                    Dictionary<string,object>[] portsRaw = DeserializeJSONList(
-                        node["ports"].ToString(), "short_name"
-                    ).ToArray();
-                    foreach(Dictionary<string,object> nodePort in portsRaw){
-                        ports.Add(
-                            new Dictionary<string,dynamic>(){
-                                {"adapterNumber", UInt16.Parse(nodePort["adapter_number"].ToString())},
-                                {"portNumber", UInt16.Parse(nodePort["port_number"].ToString())},
-                                {"link", null}
-                            } 
-                        );
-                    }
-                } catch (Exception err){
-                    Console.Error.WriteLine($"Something went wrong while extracting the ports info: {err}");
-                }
-
-                return ports.ToArray();
-            }
-
             Type classType; int i = 0;
             try{
                 foreach(Dictionary<string, object> node in JSON){
                     try{
-                        Console.Write($"Gathering information for node #{i}... ");
+                        Console.WriteLine($"Gathering information for node #{i}... ");
                         // Assign a class or another depending on the node
                         classType = Aux.NodeType(node["name"].ToString());
                         listOfNodes[i] = (Node)Activator.CreateInstance(
@@ -297,49 +253,6 @@ namespace GNS3sharp {
         private List<Link> GetLinks(List<Dictionary<string,object>> JSON){
             // Return variable
             List<Link> listOfLinks = new List<Link>();
-            // Function that returns the nodes connected by the link
-            Node[] GetNodesConnectedByLink(string nodesJSON){
-                // Return variable
-                Node[] nodesList = new Node[2];
-                List<Dictionary<string,object>> dictList = null;
-                try{
-                    dictList = DeserializeJSONList(nodesJSON, "port_number");
-                } catch (Exception err){
-                    Console.Error.WriteLine(
-                        "Some problem occured while trying to gather information about the nodes connect to the link: {0}",
-                        err.Message
-                    );
-                }
-                if (dictList.Count > 0){
-                    ushort idx = 0;
-                    foreach (Dictionary<string, object> node in dictList){
-                        try{
-                            nodesList[idx++] = nodesByID[node["node_id"].ToString()];
-                        } catch(Exception){
-                            Console.Error.WriteLine(
-                                $"Unknown node with ID: {node["node_id"].ToString()}"
-                            );
-                        }
-                    }
-                }
-                return nodesList;
-            }
-            // Extract a certain filter of the link
-            int ExtractFilter(JObject filtJSON, string filter){
-                
-                int filterValue = 0;
-
-                try{
-                    if (filter.Equals("latency"))
-                        filterValue = filtJSON.Property("delay").First.ToObject<int[]>()[0];
-                    else if (filter.Equals("jitter"))
-                        filterValue = filtJSON.Property("delay").First.ToObject<int[]>()[1];
-                    else
-                        filterValue = filtJSON.Property(filter).First.ToObject<int[]>()[0];
-                } catch (Exception){}
-                
-                return filterValue;
-            }
 
             JObject filtersJSON; int i = 0;
             Dictionary<string, string> serverInfo = new Dictionary<string, string>(){
@@ -350,7 +263,7 @@ namespace GNS3sharp {
                 string nodesJSON;
                 foreach(Dictionary<string, object> link in JSON){
                     try{
-                        Console.Write($"Gathering information for link #{i}... ");
+                        Console.WriteLine($"Gathering information for link #{i}... ");
                         filtersJSON = JObject.Parse(link["filters"].ToString());
                         nodesJSON = link["nodes"].ToString();
                         if (filtersJSON.HasValues){
@@ -486,25 +399,6 @@ namespace GNS3sharp {
             if (node1 != null && node2 != null){
                 // URL where send the data
                 string URL = ($"http://{host}:{port}/v2/projects/{projectID}/links");
-
-                // Get a certain key of the new link
-                object ExtractKeyNewLink(string JSONLink, string key){
-                    // Return variable
-                    object newID = null;
-
-                    // Parse the JSON string into an object
-                    JObject jO = JObject.Parse(JSONLink);      
-                    if (jO.HasValues){
-                        foreach (JProperty jP in jO.Properties()) {                
-                            if (jP.Name.ToString().Equals(key)){
-                                newID = (object)jP.Value;
-                                break;
-                            }
-                        }
-                    }
-
-                    return newID;
-                }
 
                 var freePort1 = node1.Ports.Where( x => (x["link"] == null) );
                 var freePort2 = node2.Ports.Where( x => (x["link"] == null) );
@@ -742,6 +636,119 @@ namespace GNS3sharp {
             } catch{}
             return foundNode;
 
+        }
+
+        //////////////////////////////////////////////////////////////////////////////////
+        // Since C#6 do not let methods to have local functions, I will place here some //
+        // functions that used to be within other methods                               //
+        //////////////////////////////////////////////////////////////////////////////////
+            
+        // Extract a JSON from a GET request
+        private static string ExtractJSONString(string local_URL){
+            // Variable with a string with all the JSON info
+            string local_json;
+            try{
+                // Get the info from the JSON file you can access from the GNS3 Rest service
+                using (System.Net.WebClient GNS3NodesProject = new System.Net.WebClient()){
+                    local_json = GNS3NodesProject.DownloadString(local_URL);
+                }
+            } catch(Exception err){
+                // Server not open
+                Console.Error.WriteLine("Impossible to connect to URL {0}: {1}", local_URL, err.Message);
+                local_json = null;
+            }
+
+            return local_json;
+        }
+
+        // Extract the ports a node has
+        private static Dictionary<string,dynamic>[] GetNodeListOfPorts(Dictionary<string, object> node){
+            // Return variable
+            List<Dictionary<string,dynamic>> ports = new List<Dictionary<string,dynamic>>();
+
+            try{
+                // Extract a dictionary with the ports defined in the project nodes JSON
+                Dictionary<string,object>[] portsRaw = DeserializeJSONList(
+                    node["ports"].ToString(), "short_name"
+                ).ToArray();
+                foreach(Dictionary<string,object> nodePort in portsRaw){
+                    ports.Add(
+                        new Dictionary<string,dynamic>(){
+                            {"adapterNumber", UInt16.Parse(nodePort["adapter_number"].ToString())},
+                            {"portNumber", UInt16.Parse(nodePort["port_number"].ToString())},
+                            {"link", null}
+                        } 
+                    );
+                }
+            } catch (Exception err){
+                Console.Error.WriteLine($"Something went wrong while extracting the ports info: {err}");
+            }
+
+            return ports.ToArray();
+        }
+
+        // Function that returns the nodes connected by the link
+        private Node[] GetNodesConnectedByLink(string nodesJSON){
+            // Return variable
+            Node[] nodesList = new Node[2];
+            List<Dictionary<string,object>> dictList = null;
+            try{
+                dictList = DeserializeJSONList(nodesJSON, "port_number");
+            } catch (Exception err){
+                Console.Error.WriteLine(
+                    "Some problem occured while trying to gather information about the nodes connect to the link: {0}",
+                    err.Message
+                );
+            }
+            if (dictList.Count > 0){
+                ushort idx = 0;
+                foreach (Dictionary<string, object> node in dictList){
+                    try{
+                        nodesList[idx++] = nodesByID[node["node_id"].ToString()];
+                    } catch(Exception){
+                        Console.Error.WriteLine(
+                            $"Unknown node with ID: {node["node_id"].ToString()}"
+                        );
+                    }
+                }
+            }
+            return nodesList;
+        }
+
+        // Extract a certain filter of the link
+        private static int ExtractFilter(JObject filtJSON, string filter){
+            
+            int filterValue = 0;
+
+            try{
+                if (filter.Equals("latency"))
+                    filterValue = filtJSON.Property("delay").First.ToObject<int[]>()[0];
+                else if (filter.Equals("jitter"))
+                    filterValue = filtJSON.Property("delay").First.ToObject<int[]>()[1];
+                else
+                    filterValue = filtJSON.Property(filter).First.ToObject<int[]>()[0];
+            } catch (Exception){}
+            
+            return filterValue;
+        }
+
+        // Get a certain key of the new link
+        private static object ExtractKeyNewLink(string JSONLink, string key){
+            // Return variable
+            object newID = null;
+
+            // Parse the JSON string into an object
+            JObject jO = JObject.Parse(JSONLink);      
+            if (jO.HasValues){
+                foreach (JProperty jP in jO.Properties()) {                
+                    if (jP.Name.ToString().Equals(key)){
+                        newID = (object)jP.Value;
+                        break;
+                    }
+                }
+            }
+
+            return newID;
         }
 
     }

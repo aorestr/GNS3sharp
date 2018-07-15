@@ -10,13 +10,13 @@ namespace GNS3sharp {
     */
     public class Link{
         // ID
-        private string id; public string ID { get => id; }
+        private string id; public string ID { get { return id; } }
         // Nodes the link connects
-        private Node[] nodes; public Node[] Nodes { get  => nodes; }
+        private Node[] nodes; public Node[] Nodes { get  { return nodes; } }
         // Parameters of the link
         private int frequencyDrop;              // th
         public int FrequencyDrop { 
-            get => frequencyDrop;
+            get { return frequencyDrop; }
             private set {
                 if (value < -1) frequencyDrop = 0;
                 else frequencyDrop = value;
@@ -24,7 +24,7 @@ namespace GNS3sharp {
         }
         private int packetLoss;                 // %
         public int PacketLoss { 
-            get  => packetLoss;
+            get  { return packetLoss; }
             private set {
                 if (value < 0) packetLoss = 0;
                 else if (value > 100) packetLoss = 100;
@@ -33,7 +33,7 @@ namespace GNS3sharp {
         }    
         private int latency;                    // ms
         public int Latency {
-            get => latency;
+            get { return latency; }
             private set {
                 if (value < 0) latency = 0;
                 else latency = value;
@@ -41,7 +41,7 @@ namespace GNS3sharp {
         }
         private int jitter;                     // ms
         public int Jitter {
-            get => jitter;
+            get { return jitter; }
             private set {
                 if (value < 0) jitter = 0;
                 else jitter = value;
