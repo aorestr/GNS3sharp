@@ -15,18 +15,16 @@ namespace GNS3sharp {
         public static Dictionary<string,object>[] nodesAvailables = {
             new Dictionary<string,object>(){
                 {"class", typeof(VPC)}, {"label", VPC.label}
-            },
-            new Dictionary<string,object>(){
+            },  new Dictionary<string,object>(){
                 {"class", typeof(MicroCore)}, {"label", MicroCore.label}
-            },
-            new Dictionary<string,object>(){
+            }, new Dictionary<string,object>(){
                 {"class", typeof(OpenvSwitch)}, {"label", OpenvSwitch.label}
-            },
-            new Dictionary<string,object>(){
+            }, new Dictionary<string,object>(){
                 {"class", typeof(EthernetSwitch)}, {"label", EthernetSwitch.label}
-            },
-            new Dictionary<string,object>(){
+            }, new Dictionary<string,object>(){
                 {"class", typeof(OpenWRT)}, {"label", OpenWRT.label}
+            }, new Dictionary<string,object>(){
+                {"class", typeof(LEDE)}, {"label", LEDE.label}
             }
         };
 

@@ -147,5 +147,20 @@ namespace GNS3sharp {
             return in_txt_split;
         }
         
+        // Send ping to a certain IP
+        public virtual string[] Ping(string IP){
+            // Reception variable as a string
+            string[] in_txt = null;
+
+            if(Aux.IsIP(IP)) {
+                Send($"ping {IP}");
+                in_txt = Receive();
+            } else{
+                Console.Error.WriteLine($"{IP} is not a valid IP");
+            }
+            // Return the response
+            return in_txt;
+        }
+
     }
 }

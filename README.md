@@ -66,7 +66,7 @@ OurVPC.Send("show");
 string[] messages = OurVPC.Receive();
 ```
 
-So far, only five type of nodes have been included: *VPC*, *EthernetSwitch*, *MicroCore*, *OpenWRT* and *OpenvSwitch*. You can create your own classes for the devices you plan to use. Otherwise, you can use the generic *Node* class instead.
+So far, only five type of nodes have been included: *VPC*, *EthernetSwitch*, *MicroCore*, *OpenWRT*, *LEDE* and *OpenvSwitch*. You can create your own classes for the devices you plan to use. Otherwise, you can use the generic *Node* class instead.
 
 ## Links ##
 Nodes are connected to each other by links. These links have some parameters that you can interact with such as the latency or the frequency drop. You have plenty control of these links through the API as well.

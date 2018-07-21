@@ -10,5 +10,8 @@ namespace GNS3sharp {
             base(_consoleHost, _port, _name, _id, _ports){}
         public Router(Node clone) : base(clone){}
 
+        public abstract string[] ActivateInterface(string IP, string netmask = "255.255.255.0", ushort interfaceNumber = 0);
+        public abstract string[] DeactivateInterface(string IP, string netmask = "255.255.255.0", ushort interfaceNumber = 0);
+        public abstract string[] SetRoute(string destination, string gateway, string netmask = "255.255.255.0");
     }
 }
