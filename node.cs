@@ -54,7 +54,7 @@ namespace GNS3sharp {
         // Close the connection with the server before leaving
         ~Node(){
             try{
-                // Close the nextwork stream
+                // Close the network stream
                 if(this.netStream != null)
                     this.netStream.Close();
                 // Close the TCP connection
@@ -148,16 +148,23 @@ namespace GNS3sharp {
         }
         
         // Send ping to a certain IP
-        public virtual string[] Ping(string IP){
+        public string[] Ping(string IP, ushort count=5){
+            return Ping(IP, $"-c {count.ToString()}");
+        }
+
+        // Send ping to a certain IP
+        protected virtual string[] Ping(
+            string IP, string additionalParameters){
             // Reception variable as a string
             string[] in_txt = null;
 
             if(Aux.IsIP(IP)) {
-                Send($"ping {IP}");
+                Send($"ping {IP} {additionalParameters}");
                 in_txt = Receive();
             } else{
                 Console.Error.WriteLine($"{IP} is not a valid IP");
             }
+
             // Return the response
             return in_txt;
         }

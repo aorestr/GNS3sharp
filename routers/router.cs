@@ -10,6 +10,10 @@ namespace GNS3sharp {
             base(_consoleHost, _port, _name, _id, _ports){}
         public Router(Node clone) : base(clone){}
 
+        public virtual string[] Ping(string IP, ushort count=5, ushort timeout=10){
+            return Ping(IP,$"-c {count.ToString()} -W {timeout.ToString()}");
+        }
+
         public abstract string[] ActivateInterface(string IP, string netmask = "255.255.255.0", ushort interfaceNumber = 0);
         public abstract string[] DeactivateInterface(string IP, string netmask = "255.255.255.0", ushort interfaceNumber = 0);
         public abstract string[] SetRoute(string destination, string gateway, string netmask = "255.255.255.0");

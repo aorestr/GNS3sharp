@@ -56,5 +56,10 @@ namespace GNS3sharp {
 
         }
 
+        // Send a ping to a certain IP
+        public virtual string[] Ping(string IP, ushort count=5, ushort timeout=10){
+            return Ping(IP,$"-c {count.ToString()} -W {timeout.ToString()}");
+        }
+
     }
 }

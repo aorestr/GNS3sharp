@@ -104,6 +104,16 @@ namespace GNS3sharp {
 
         }
 
+        public string[] Ping(string IP, ushort count=5, uint msBetweenPackets = 500, string protocol="ICMP"){
+            ushort protocolNum = 1;
+            if (protocol.ToUpper().Equals("TCP"))
+                protocolNum = 6;
+            else if(protocol.ToUpper().Equals("UDP"))
+                protocolNum = 17;
+                
+            return Ping(IP, $"-c {count.ToString()} -P {protocolNum.ToString()} -i {msBetweenPackets}");
+        }
+
         // Show the route to a certain IP
         public string[] Trace(string IP){
 

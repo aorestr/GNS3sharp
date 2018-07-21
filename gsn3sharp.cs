@@ -8,8 +8,7 @@ using Newtonsoft.Json.Linq;
 
 namespace GNS3sharp {
     /*
-    It handles the connections with the different components of
-    a GNS3 project
+        Main class of the namespace. It contains plenty of methods and properties to handle your GNS3 projects
     */
     public class GNS3sharp {
 
