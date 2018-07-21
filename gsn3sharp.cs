@@ -8,8 +8,7 @@ using Newtonsoft.Json.Linq;
 
 namespace GNS3sharp {
     /*
-    It handles the connections with the different components of
-    a GNS3 project
+        Main class of the namespace. It contains plenty of methods and properties to handle your GNS3 projects
     */
     public class GNS3sharp {
 
@@ -107,7 +106,29 @@ namespace GNS3sharp {
         }
 
         // It returns a dictionary with information about the nodes of the project
+<<<<<<< HEAD
         private static List<Dictionary<string,object>> ExtractDictionary(string URL, string lastElement){
+=======
+        internal static List<Dictionary<string,object>> ExtractDictionary(string URL, string lastElement){
+            
+            // Extract a JSON from a GET request
+            string ExtractJSONString(string local_URL){
+                // Variable with a string with all the JSON info
+                string local_json;
+                try{
+                    // Get the info from the JSON file you can access from the GNS3 Rest service
+                    using (System.Net.WebClient GNS3NodesProject = new System.Net.WebClient()){
+                        local_json = GNS3NodesProject.DownloadString(local_URL);
+                    }
+                } catch(Exception err){
+                    // Server not open
+                    Console.Error.WriteLine("Impossible to connect to URL {0}: {1}", local_URL, err.Message);
+                    local_json = null;
+                }
+
+                return local_json;
+            }
+>>>>>>> master
 
             // Raw string
             string json = ExtractJSONString(URL);

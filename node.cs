@@ -56,7 +56,7 @@ namespace GNS3sharp {
         // Close the connection with the server before leaving
         ~Node(){
             try{
-                // Close the nextwork stream
+                // Close the network stream
                 if(this.netStream != null)
                     this.netStream.Close();
                 // Close the TCP connection
@@ -137,20 +137,25 @@ namespace GNS3sharp {
                 byte[] in_bytes = new byte[tcpConnection.ReceiveBufferSize];
                 // Reception variable as a string
                 string in_txt = "";
+                // Number of bytes read for every iteration
+                int numberOfBytesRead;
                 do{
-                    // We repeat this until there's no more to read
-                    try{
-                        this.netStream.Read(buffer: in_bytes, offset: 0, size: in_bytes.Length);
-                        in_txt = $"{in_txt}{Encoding.Default.GetString(in_bytes)}";
-                    } catch(NullReferenceException){
-                        Console.Error.WriteLine("Connection is null. Probably it was not possible to initialize it");
-                    } catch(IOException err1){
-                        Console.Error.WriteLine("Time to write expired: {0}", err1.Message);
-                    } catch(Exception err2){
-                        Console.Error.WriteLine("Some error occured while receiving text: {0}", err2.Message);
-                    }
+                    do{
+                        // We repeat this until there's no more to read
+                        try{
+                            numberOfBytesRead = this.netStream.Read(buffer: in_bytes, offset: 0, size: in_bytes.Length);
+                            in_txt = $"{in_txt}{Encoding.Default.GetString(in_bytes, 0, numberOfBytesRead)}";
+                        } catch(NullReferenceException){
+                            Console.Error.WriteLine("Connection is null. Probably it was not possible to initialize it");
+                        } catch(IOException err1){
+                            Console.Error.WriteLine("Time to write expired: {0}", err1.Message);
+                        } catch(Exception err2){
+                            Console.Error.WriteLine("Some error occured while receiving text: {0}", err2.Message);
+                        }
+                    } while (this.netStream.DataAvailable);
                     // We need to wait for the server to process our messages
                     Thread.Sleep(2000);
+                // We double check the availability of data 
                 } while (this.netStream.DataAvailable);
                 // Remove all the unnecesary characters contained in the buffer and split the text we have received in \n
                 in_txt_split = Regex.Replace(in_txt, @"(\0){2,}", "").Split('\n');
@@ -158,5 +163,32 @@ namespace GNS3sharp {
             return in_txt_split;
         }
         
+        // Send ping to a certain IP
+        public string[] Ping(string IP, ushort count=5){
+            return Ping(IP, $"-c {count.ToString()}");
+        }
+
+        // Send ping to a certain IP
+        protected string[] Ping(
+            string IP, string additionalParameters){
+            // Reception variable as a string
+            string[] in_txt = null;
+
+            if(Aux.IsIP(IP)) {
+                Send($"ping {IP} {additionalParameters}");
+                in_txt = Receive();
+            } else{
+                Console.Error.WriteLine($"{IP} is not a valid IP");
+            }
+
+            // Return the response
+            return in_txt;
+        }
+
+        public virtual bool PingResult(string[] pingMessage){
+            bool result = false;
+            return result;
+        }
+
     }
 }

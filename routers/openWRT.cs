@@ -20,18 +20,16 @@ namespace GNS3sharp {
         }
 
         // Activate an interface of the router
-        public string[] ActivateInterface(
+        public override string[] ActivateInterface(
             string IP, string netmask = "255.255.255.0", ushort interfaceNumber = 0
             ){
-            ActivateTerminal();
             return ChangeInterfaceStatus("up", IP, netmask, interfaceNumber);
         }
 
         // Dectivate an interface of the router
-        public string[] DeactivateInterface(
+        public override string[] DeactivateInterface(
             string IP, string netmask = "255.255.255.0", ushort interfaceNumber = 0
             ){
-            ActivateTerminal();
             return ChangeInterfaceStatus("down", IP, netmask, interfaceNumber);
         }
 
@@ -47,6 +45,7 @@ namespace GNS3sharp {
             } else if(!Aux.IsNetmask(netmask)){ 
                 Console.Error.WriteLine($"{netmask} is not a valid netmask");
             } else{
+                ActivateTerminal();
                 Send($"ifconfig eth{interfaceNumber.ToString()} {IP} netmask {netmask} {status}");
                 in_txt = Receive();
             }
@@ -56,7 +55,7 @@ namespace GNS3sharp {
         }
 
         // Set a route to a cerrtain destination through a gateway
-        public string[] SetRoute(string destination, string gateway, string netmask = "255.255.255.0"){
+        public override string[] SetRoute(string destination, string gateway, string netmask = "255.255.255.0"){
             // Reception variable as a string
             string[] in_txt = null;
 
@@ -69,6 +68,29 @@ namespace GNS3sharp {
                 Send($"route add -net {destination} netmask {netmask} gw {gateway}");
                 in_txt = Receive();
             }
+
+            // Return the response
+            return in_txt;
+        }
+
+        // (Re)Start the firewall
+        public string[] EnableFirewall(){
+            return ChangeFirewallStatus("start");
+        }
+
+        // Stop the firewall
+        public string[] DisableFirewall(){
+            return ChangeFirewallStatus("stop");
+        }
+
+        // Change firewall status to start or stop
+        private string[] ChangeFirewallStatus(string newStatus){
+            // Reception variable as a string
+            string[] in_txt = null;
+
+            ActivateTerminal();
+            Send($"/etc/init.d/firewall {newStatus}");
+            in_txt = Receive();
 
             // Return the response
             return in_txt;

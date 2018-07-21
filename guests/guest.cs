@@ -12,6 +12,7 @@ namespace GNS3sharp {
         public Guest(Node clone) : base(clone){}
 
         // Methods every guest subclass must have
+<<<<<<< HEAD
         abstract public string[] SetIP(string IP, string netmask, ushort adapter_number, string gateway);
 
         // Send ping to a certain IP
@@ -31,5 +32,8 @@ namespace GNS3sharp {
             return in_txt;
 
         }
+=======
+        public abstract string[] SetIP(string IP, string netmask, ushort adapter_number, string gateway);
+>>>>>>> master
     }
 }
