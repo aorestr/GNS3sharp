@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Collections.Generic;
 
 namespace GNS3sharp {
@@ -112,6 +113,27 @@ namespace GNS3sharp {
                 protocolNum = 17;
                 
             return Ping(IP, $"-c {count.ToString()} -P {protocolNum.ToString()} -i {msBetweenPackets}");
+        }
+
+        // Check whether a ping went right or wrong. The results are showed different from
+        // the average linux based node
+        public override bool PingResult(string[] pingMessage){
+            // We assume the result will be negative
+            bool result = false;
+            string[] lineSplit;
+            foreach(string line in pingMessage){
+                lineSplit = line.Split(' ');
+                // Check if any line matches with "%d bytes from ..."
+                if (
+                    Regex.IsMatch(lineSplit[0].Trim(), @"\d+") &&
+                    Regex.IsMatch(lineSplit[1].Trim(), @"bytes") && 
+                    Regex.IsMatch(lineSplit[2].Trim(), @"from")
+                    ){
+                    result = true;
+                    break;
+                }
+            }
+            return result;
         }
 
         // Show the route to a certain IP

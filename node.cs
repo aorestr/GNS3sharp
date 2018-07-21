@@ -3,6 +3,7 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -20,8 +21,7 @@ namespace GNS3sharp {
         protected Dictionary<string,dynamic>[] ports; public Dictionary<string,dynamic>[] Ports{ get => ports; }
 
         // List of links connected to the node
-        protected List<Link> linksAttached = new List<Link>();
-        public List<Link> LinksAttached { get => linksAttached; }
+        protected List<Link> linksAttached = new List<Link>(); public List<Link> LinksAttached { get => linksAttached; }
 
         // Connection properties
         protected TcpClient tcpConnection; public TcpClient TCPConnection { get => tcpConnection; }
@@ -174,8 +174,20 @@ namespace GNS3sharp {
             return in_txt;
         }
 
+        // Check whether a ping went right or wrong
         public virtual bool PingResult(string[] pingMessage){
+            // We assume the result will be negative
             bool result = false;
+            foreach(string line in pingMessage.Reverse<string>()){
+                // Search for the line with the results
+                if (Regex.IsMatch(line, @"\d+\spackets\stransmitted,\s\d+\spackets\sreceived,\s(\d+|\d+[.]\d+)%?%\spacket\sloss\s")){
+                    string[] resultStr = line.Split(',');
+                    // If "%d packets received" is different to zero means the ping went right
+                    if (Int32.Parse(resultStr[1].TrimStart().Split(' ')[0]) != 0)
+                        result = true;
+                    break;
+                }
+            }
             return result;
         }
 
