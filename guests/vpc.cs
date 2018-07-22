@@ -122,7 +122,7 @@ namespace GNS3sharp {
             bool result = false;
             string[] lineSplit;
             foreach(string line in pingMessage){
-                lineSplit = line.Split(' ');
+                lineSplit = line.Split(new char[] {' ','\t'}, StringSplitOptions.RemoveEmptyEntries);
                 // Check if any line matches with "%d bytes from ..."
                 if (
                     Regex.IsMatch(lineSplit[0].Trim(), @"\d+") &&

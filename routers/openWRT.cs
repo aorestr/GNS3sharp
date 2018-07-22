@@ -7,6 +7,10 @@ namespace GNS3sharp {
         // Label to determine what device is
         public const string label = "OPENWRT";
 
+        public override RoutingTable RoutingTable { 
+            get => this.GetRoutingTable(this.GetRoutingTable());
+        }
+
         // Constructors
         public OpenWRT() : base() {}
         public OpenWRT(string _consoleHost, ushort _port, string _name, string _id,
@@ -71,6 +75,57 @@ namespace GNS3sharp {
 
             // Return the response
             return in_txt;
+        }
+
+        // Get the routing table of the router as an array of strings
+        public override string[] GetRoutingTable(){
+            // Reception variable as a string
+            string[] in_txt = null;
+
+            ActivateTerminal();
+            Send($"route -n");
+            in_txt = Receive();
+
+            // Return the response
+            return in_txt;
+        }
+
+        // Get the routing table of the router as a RoutingTable object.
+        // It's used to get the RoutingTable property of the class
+        private RoutingTable GetRoutingTable(string[] routingTable){
+            RoutingTable table = new RoutingTable();
+
+            string[][] lines = new string[routingTable.Length][];
+
+            // Position of the "Destination-Gateway-Genmask-Flags-Metric-Ref-Use-Iface" line
+
+            short informationPosition = -1;
+            for (short i = 0; i < routingTable.Length; i++){
+                lines[i] = routingTable[i].Trim().Split(new char[] {' ','\t'}, StringSplitOptions.RemoveEmptyEntries);
+                if (
+                    lines[i][0].ToUpper().Equals("DESTINATION") &&
+                    lines[i][1].ToUpper().Equals("GATEWAY") &&
+                    lines[i][2].ToUpper().Equals("GENMASK")
+                    )
+                    informationPosition = i;
+            }
+
+            if (informationPosition >= 0){
+                short i = informationPosition;
+                // While the first element of every line keep being an IP means we are
+                // scanning the actual routing table
+                while (Aux.IsIP(lines[++i][0])){
+                    table.AddRoute(
+                        lines[i][0], lines[i][1], lines[i][2],
+                        lines[i][7], UInt16.Parse(lines[i][5])
+                    );
+                }
+            } else{
+                table = null;
+                Console.Error.WriteLine("Impossible to analyze the routing table");
+            }
+
+            return table;
         }
 
         // (Re)Start the firewall

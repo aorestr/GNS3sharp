@@ -79,4 +79,58 @@ namespace GNS3sharp {
             return result;
         }
     }
+
+    // Structure for gathering routing tables
+    public class RoutingTable{
+
+        // Every route within the table
+        public struct RoutingTableRow{
+            // Properties are the main fields of a routing table
+            private string destination; public string Destination{ get => destination;}
+            private string gateway; public string Gateway{ get => gateway;}
+            private string netmask; public string Netmask{ get => netmask;}
+            private string iface; public string Iface{ get => iface;}
+            private int metric; public int Metric{ get => metric;}
+
+            // Constructor that initialize every parameter
+            public RoutingTableRow(
+                string _destination, string _gateway, string _netmask, 
+                string _iface, int _metric
+                ){
+                if (_gateway.Equals('*'))
+                    _gateway = "0.0.0.0";
+                this.destination = _destination;
+                this.gateway = _gateway;
+                this.netmask = _netmask;
+                this.iface = _iface;
+                this.metric = _metric;
+            }
+        }
+
+        private List<RoutingTableRow> routes; public RoutingTableRow[] Routes{ get => routes.ToArray();}
+
+        // Initialize the object 
+        public RoutingTable(){
+            this.routes = new List<RoutingTableRow>();
+        }
+
+        // Initialize the object with fixed size
+        public RoutingTable(ushort numberOfRoutes){
+            this.routes = new List<RoutingTableRow>(numberOfRoutes);
+        }
+
+        // Add a new route to the table
+        public void AddRoute(
+            string destination, string gateway, string netmask, 
+            string iface, int metric
+            ){
+            if (Aux.IsIP(destination) && Aux.IsIP(gateway) && Aux.IsNetmask(netmask)){
+                routes.Add(new RoutingTableRow(
+                    destination, gateway, netmask, iface, metric
+                ));
+            } else{
+                Console.Error.WriteLine("Impossible to add the new row: some of the parameters were not valid");
+            }
+        }
+    }
 }
