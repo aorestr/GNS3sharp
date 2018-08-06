@@ -36,7 +36,7 @@ namespace GNS3sharp {
         }
 
         // Constructor that sets all the parameters for the node
-        public Node(string _consoleHost, ushort _port, string _name, string _id,
+        internal Node(string _consoleHost, ushort _port, string _name, string _id,
             Dictionary<string,dynamic>[] _ports){
 
             this.consoleHost = _consoleHost; this.port = _port; this.name = _name; this.id = _id;
