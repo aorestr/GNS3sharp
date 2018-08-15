@@ -1,5 +1,6 @@
 # Folder with the Visual Code config #
 .vscode/
+.vs/
 
 # .NET project folders #
 GNS3sharp.csproj

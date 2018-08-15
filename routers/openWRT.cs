@@ -129,12 +129,12 @@ namespace GNS3sharp {
         }
 
         // (Re)Start the firewall
-        public string[] EnableFirewall(){
+        public virtual string[] EnableFirewall(){
             return ChangeFirewallStatus("start");
         }
 
         // Stop the firewall
-        public string[] DisableFirewall(){
+        public virtual string[] DisableFirewall(){
             return ChangeFirewallStatus("stop");
         }
 
@@ -149,6 +149,38 @@ namespace GNS3sharp {
 
             // Return the response
             return in_txt;
+        }
+
+        // Get the IP related to a certain interface. The first parameter
+        // of the list is the IP and the second one is the netmask
+        public virtual string[] GetIPByInterface(string iface){
+
+            string GetParameterIfconfig(string _iface, string type){
+
+                string result = null; string command = null;
+                if (type.Equals("IP"))
+                    command = $"ifconfig {_iface} | grep 'inet addr' | cut -d: -f2 | awk '{{print $1}}'";
+                else if (type.Equals("NETMASK"))
+                    command = $"ifconfig {_iface} | grep 'inet addr' | cut -d: -f4 | awk '{{print $1}}'";
+                if (command != null){
+                    string lineTemp;
+                    Send(command);
+                    foreach (string line in Receive()) {
+                        lineTemp = line.Trim();
+                        if (Aux.IsIP(lineTemp)){
+                            result = lineTemp;
+                            break;
+                        }
+                    }
+                }
+                return result;
+
+            }
+
+            return new string[]{ 
+                GetParameterIfconfig(iface, "IP"), GetParameterIfconfig(iface, "NETMASK") 
+            };
+            
         }
 
     }
