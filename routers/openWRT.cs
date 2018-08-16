@@ -153,7 +153,7 @@ namespace GNS3sharp {
 
         // Get the IP related to a certain interface. The first parameter
         // of the list is the IP and the second one is the netmask
-        public virtual string[] GetIPByInterface(string iface){
+        public override string[] GetIPByInterface(string iface){
 
             string GetParameterIfconfig(string _iface, string type){
 
