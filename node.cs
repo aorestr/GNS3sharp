@@ -9,33 +9,100 @@ using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace GNS3sharp {
+
+    /// <summary>
+    /// This class represents a node from a GNS3 project. Its main methods are:
+    /// <list type="bullet">
+    /// <item>
+    /// <term>Send</term>
+    /// <description>Allows you to send some message to a node</description>
+    /// </item>
+    /// <item>
+    /// <term>Receive</term>
+    /// <description>Allows you to receive messages from a node</description>
+    /// </item>
+    /// </list>
+    /// <remarks>
+    /// This class can interact directly by telnet to a node
+    /// </remarks>
+    /// </summary>
     public class Node{
-        // Node attributes
-        protected string consoleHost; public string ConsoleHost { get => consoleHost; }
-        protected ushort port; public ushort Port { get => port; }
-        protected string name; public string Name { get => name; }
-        protected string id; public string ID { get => id; }
 
-        // Ports of the node. It contains information about every network interface
-        // (adapterNumber, portNumber, link->(null if free))
-        protected Dictionary<string,dynamic>[] ports; public Dictionary<string,dynamic>[] Ports{ get => ports; }
+        protected string consoleHost;
+        /// <summary>
+        /// IP of the machine where the node is hosted
+        /// </summary>
+        /// <value>String IP</value>
+        public string ConsoleHost { get => consoleHost; }
 
-        // List of links connected to the node
-        protected List<Link> linksAttached = new List<Link>(); public List<Link> LinksAttached { get => linksAttached; }
+        protected ushort port;
+        /// <summary>
+        /// Port of the machine where the node is hosted
+        /// </summary>
+        /// <value>Port number</value>
+        public ushort Port { get => port; }
 
-        // Connection properties
-        protected TcpClient tcpConnection; public TcpClient TCPConnection { get => tcpConnection; }
-        protected NetworkStream netStream; public NetworkStream NetStream { get => netStream; }
+        protected string name;
+        /// <summary>
+        /// Name of the node stablished in the project
+        /// </summary>
+        /// <value>String name</value>
+        public string Name { get => name; }
 
-        ///////////////////////////// Constructors ////////////////////////////////////////////
+        protected string id;
+        /// <summary>
+        /// ID the node has implicitly
+        /// </summary>
+        /// <value>String ID</value>
+        public string ID { get => id; }
 
-        // Constructor by default. It's not intended to be used
-        public Node(){
+        protected Dictionary<string,dynamic>[] ports;
+        /// <summary>
+        /// Array of dictionaries that contains information about every network interface
+        /// </summary>
+        /// <value>
+        /// Keys: adapterNumber, portNumber and link. If the value found in link
+        /// is null means that interface is not attached to anything yet
+        /// </value>
+        public Dictionary<string,dynamic>[] Ports{ get => ports; }
+
+        protected List<Link> linksAttached = new List<Link>();
+        /// <summary>
+        /// List of the links that the node is attach to
+        /// </summary>
+        /// <value>List of <c>Link</c></value>
+        public List<Link> LinksAttached { get => linksAttached; }
+
+        protected TcpClient tcpConnection;
+        /// <summary>
+        /// TCP client to stablish connections
+        /// </summary>
+        internal TcpClient TCPConnection { get => tcpConnection; }
+        
+        protected NetworkStream netStream;
+        /// <summary>
+        /// Network stream through which messages are sent
+        /// </summary>
+        internal NetworkStream NetStream { get => netStream; }
+
+        ///////////////////////////// Constructors ////////////////////////////////////////
+
+        /// <summary>
+        /// Constructor by default. Every property is empty
+        /// </summary>
+        internal Node(){
             this.consoleHost = null; this.port = 0; this.name = null; this.id = null;
             this.tcpConnection = null; this.netStream = null;
         }
 
-        // Constructor that sets all the parameters for the node
+        /// <summary>
+        /// Constructor of <c>Node</c>. It must be called from a <c>GNS3sharp</c> object
+        /// </summary>
+        /// <param name="_consoleHost">IP of the machine where the node is hosted</param>
+        /// <param name="_port">Port of the machine where the node is hosted</param>
+        /// <param name="_name">Name of the node stablished in the project</param>
+        /// <param name="_id">ID the node has implicitly</param>
+        /// <param name="_ports">Array of dictionaries that contains information about every network interface</param>
         internal Node(string _consoleHost, ushort _port, string _name, string _id,
             Dictionary<string,dynamic>[] _ports){
 
@@ -44,14 +111,19 @@ namespace GNS3sharp {
             (this.tcpConnection, this.netStream) = this.Connect();
         }
 
-        // In case we want to clone the instance
+        /// <summary>
+        /// Constructor that replicates a node from another one
+        /// </summary>
+        /// <param name="clone">Node you want to make the copy from</param>
         public Node(Node clone){
             this.consoleHost = clone.ConsoleHost; this.port = clone.Port;
             this.name = clone.Name; this.id = clone.ID; this.ports = clone.Ports;
             this.tcpConnection = clone.TCPConnection; this.netStream = clone.NetStream;
         }
 
-        // Close the connection with the server before leaving
+        /// <summary>
+        /// Close the connection with the node before leaving
+        /// </summary>
         ~Node(){
             try{
                 // Close the network stream
@@ -65,7 +137,11 @@ namespace GNS3sharp {
 
         ///////////////////////////////// Methods ////////////////////////////////////////////
 
-        // Stablish a TCP connection with the node
+        /// <summary>
+        /// Stablish a TCP connection with the node and makes a network stream out of it
+        /// </summary>
+        /// <param name="timeout">Timeout (in seconds) before quitting the connection</param>
+        /// <returns></returns>
         protected (TcpClient Connection, NetworkStream Stream) Connect(int timeout = 10000){
             // Network endpoint as an IP address and a port number
             IPEndPoint address = new IPEndPoint(IPAddress.Parse(this.consoleHost),this.port);
@@ -84,12 +160,24 @@ namespace GNS3sharp {
             return (newConnection, newStream);
         }
 
-        // Send a message we choose as a parameter to the node
+        /// <summary>
+        /// Send a message to the node through a network stream
+        /// </summary>
+        /// <param name="message">String with the message that is intended to be sent</param>
+        /// <example>
+        /// <code>
+        /// PC.Send("ifconfig");
+        /// </code>
+        /// </example>
         public void Send(string message){
 
             if (this.tcpConnection == null)
                 (this.tcpConnection, this.netStream) = this.Connect();
-            if (this.tcpConnection != null && this.netStream.CanWrite){
+            if (this.tcpConnection == null)
+                Console.Error.WriteLine("The connection couldn't be stablished and so the message can not be sent");
+            else if (!this.netStream.CanWrite)
+                Console.Error.WriteLine("Impossible to send any messages right now");
+            else{
                 try{
                     // We need to convert the string into a bytes array first
                     byte[] out_txt = Encoding.Default.GetBytes($"{message}\n");
@@ -107,13 +195,20 @@ namespace GNS3sharp {
                         message, err3.Message
                     );
                 }
-            } else{
-                Console.Error.WriteLine("Impossible to send any messages right now");
             }
 
         }
-
-        // Get the info from the buffer terminal of a node
+        
+        /// <summary>
+        /// Receive messages from the buffer of the node network stream
+        /// </summary>
+        /// <returns>Messages as an array of strings</returns>
+        /// <example>
+        /// <code>
+        /// foreach(string line in PC.Receive())
+        ///     Console.WriteLine("${line}");
+        /// </code>
+        /// </example>
         public string[] Receive(){
 
             // Reception variable as a string split by \n
@@ -152,12 +247,34 @@ namespace GNS3sharp {
             return in_txt_split;
         }
         
-        // Send ping to a certain IP
+        /// <summary>
+        /// Send Ping to a certain IP
+        /// </summary>
+        /// <param name="IP">IP where to send the ICMP packets to</param>
+        /// <param name="count">Number of retries. By default 5</param>
+        /// <returns>The result messages of the ping</returns>
+        /// <example>
+        /// <code>
+        /// foreach(string line in PC.Ping("192.168.30.5"))
+        ///     Console.WriteLine($"{line}");
+        /// </code>
+        /// </example>
         public string[] Ping(string IP, ushort count=5){
             return Ping(IP, $"-c {count.ToString()}");
         }
 
-        // Send ping to a certain IP
+        /// <summary>
+        /// Send Ping to a certain IP. This method is used by overwritings of <c>Ping()</c>
+        /// </summary>
+        /// <param name="IP">IP where to send the ICMP packets to</param>
+        /// <param name="additionalParameters">Additional parameters for the ping</param>
+        /// <returns>The result messages of the ping</returns>
+        /// <example>
+        /// <code>
+        /// foreach(string line in PC.Ping("192.168.30.5"))
+        ///     Console.WriteLine($"{line}");
+        /// </code>
+        /// </example>
         protected string[] Ping(
             string IP, string additionalParameters){
             // Reception variable as a string
@@ -174,7 +291,17 @@ namespace GNS3sharp {
             return in_txt;
         }
 
-        // Check whether a ping went right or wrong
+        /// <summary>
+        /// Check whether a ping went right or wrong
+        /// </summary>
+        /// <param name="pingMessage">Result of a ping</param>
+        /// <returns>True if the ping went right, False otherwise</returns>
+        /// <example>
+        /// <code>
+        /// if (PC.PingResult(PC.Ping("192.168.30.5")))
+        ///     Console.WriteLine("The ping went ok");
+        /// </code>
+        /// </example>
         public virtual bool PingResult(string[] pingMessage){
             // We assume the result will be negative
             bool result = false;
