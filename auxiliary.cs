@@ -7,12 +7,18 @@ namespace GNS3sharp {
     /*
     Defines some methods that are helpful for other classes
     */
-    public static class Aux{
+    /// <summary>
+    /// Class that defines some methods and propertiesthat are helpful for
+    /// the other classes of the namespace
+    /// </summary>
+    internal static class Aux{
 
-        // This array of dictionaries contains the different classes of nodes and
-        // their 'label's. The 'label's are the strings you must place between brackets
-        // in the node name in the GNS3 project
-        public static Dictionary<string,object>[] nodesAvailables = {
+        /// <summary>
+        /// Array of dictionaries. Every dictionary contains two keys: "class" and "label". If you create
+        /// a new appliance class, you must add its label and type here
+        /// </summary>
+        /// <value>Values of the dictionaries are the 'type' related to the chosen label</value>
+        internal static Dictionary<string,object>[] nodesAvailables = {
             new Dictionary<string,object>(){
                 {"class", typeof(VPC)}, {"label", VPC.label}
             },  new Dictionary<string,object>(){
@@ -28,7 +34,13 @@ namespace GNS3sharp {
             }
         };
 
-        // It returns the right class type for every node
+        /// <summary>
+        /// Return the right class type for a certain node. Try to match the label of the node
+        /// with once of those defined in <c>nodesAvailable</c>
+        /// </summary>
+        /// <param name="nodeName">Name set to a node in GNS3</param>
+        /// <returns>The type of the node. If it can not find the certain type
+        /// of node, returns <c>typeof(Node)</c></returns>
         internal static Type NodeType(string nodeName){
 
             // If something goes wrong and the label is not properly set on the
@@ -48,15 +60,27 @@ namespace GNS3sharp {
             return newNode;
         }
 
-        // Guess whether a string is an IP or not
+        /// <summary>
+        /// Guess whether a string is an IP or not
+        /// </summary>
+        /// <param name="IP">String to check</param>
+        /// <returns>True if the string is an IP, False otherwise</returns>
         internal static bool IsIP(string IP) => 
             Regex.IsMatch(IP, @"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$");
 
-        // Guess whether a string is a netmask or not
+        /// <summary>
+        /// Guess whether a string is a netmask or not
+        /// </summary>
+        /// <param name="netmask">String to check</param>
+        /// <returns>True if the string is a netmask, False otherwise</returns>
         internal static bool IsNetmask(string netmask) =>
             Regex.IsMatch(netmask, @"^(((255\.){3}(255|254|252|248|240|224|192|128|0+))|((255\.){2}(255|254|252|248|240|224|192|128|0+)\.0)|((255\.)(255|254|252|248|240|224|192|128|0+)(\.0+){2})|((255|254|252|248|240|224|192|128|0+)(\.0+){3}))$");
         
-        // Convert a mask written by numbers and dots into its CIDR notation
+        /// <summary>
+        /// Convert a mask written in numbers and dots into its CIDR notation
+        /// </summary>
+        /// <param name="netmaskDecimals">Mask written in numbers and dots</param>
+        /// <returns>Mask in CIDR notation</returns>
         internal static short NetmaskCIDR(string netmaskDecimals){
             short result = 0;
 
@@ -80,19 +104,61 @@ namespace GNS3sharp {
         }
     }
 
-    // Structure for gathering routing tables
+    /// <summary>
+    /// Structure for gathering routing tables
+    /// <remarks>
+    /// It is just a structure for better handling routing tables
+    /// </remarks>
+    /// </summary>
     public class RoutingTable{
 
-        // Every route within the table
+        /// <summary>
+        /// Class that represents a row (a route) of a routing table
+        /// </summary>
         public struct RoutingTableRow{
-            // Properties are the main fields of a routing table
-            private string destination; public string Destination{ get => destination;}
-            private string gateway; public string Gateway{ get => gateway;}
-            private string netmask; public string Netmask{ get => netmask;}
-            private string iface; public string Iface{ get => iface;}
-            private int metric; public int Metric{ get => metric;}
+            private string destination;
+            /// <summary>
+            /// Destination of the route
+            /// </summary>
+            /// <value>Address as a string</value>
+            public string Destination{ get => destination;}
 
-            // Constructor that initialize every parameter
+            private string gateway;
+            /// <summary>
+            /// Gateway of the route
+            /// </summary>
+            /// <value>Address as a string</value>
+            public string Gateway{ get => gateway;}
+            
+            private string netmask;
+            /// <summary>
+            /// Netmask of the route
+            /// </summary>
+            /// <value>Netmask as a string</value>
+            public string Netmask{ get => netmask;}
+
+            private string iface;
+            /// <summary>
+            /// Interface related to the route
+            /// </summary>
+            /// <value>Interface as a string</value>
+            public string Iface{ get => iface;}
+
+            private int metric;
+            /// <summary>
+            /// Metric of the route
+            /// </summary>
+            /// <value>Metric as an integer</value>
+            public int Metric{ get => metric;}
+
+            /// <summary>
+            /// Constructor that initializes every parameter
+            /// </summary>
+            /// <param name="_destination">Destination of the route</param>
+            /// <param name="_gateway">Gateway of the route</param>
+            /// <param name="_netmask">Netmask of the route</param>
+            /// <param name="_iface">Interface related to the route</param>
+            /// <param name="_metric">Metric of the route</param>
             public RoutingTableRow(
                 string _destination, string _gateway, string _netmask, 
                 string _iface, int _metric
@@ -107,19 +173,36 @@ namespace GNS3sharp {
             }
         }
 
-        private List<RoutingTableRow> routes; public RoutingTableRow[] Routes{ get => routes.ToArray();}
+        private List<RoutingTableRow> routes;
+        /// <summary>
+        /// List of the routes the table contains
+        /// </summary>
+        /// <returns>List of <c>RoutingTableRow</c></returns>
+        public RoutingTableRow[] Routes{ get => routes.ToArray();}
 
-        // Initialize the object 
+        /// <summary>
+        /// Initialize the object
+        /// </summary>
         public RoutingTable(){
             this.routes = new List<RoutingTableRow>();
         }
 
-        // Initialize the object with fixed size
+        /// <summary>
+        /// Initialize the object with a fixed size
+        /// </summary>
+        /// <param name="numberOfRoutes">Number of routes the table contains</param>
         public RoutingTable(ushort numberOfRoutes){
             this.routes = new List<RoutingTableRow>(numberOfRoutes);
         }
 
-        // Add a new route to the table
+        /// <summary>
+        /// Add a new route to the table
+        /// </summary>
+        /// <param name="_destination">Destination of the route</param>
+        /// <param name="_gateway">Gateway of the route</param>
+        /// <param name="_netmask">Netmask of the route</param>
+        /// <param name="_iface">Interface related to the route</param>
+        /// <param name="_metric">Metric of the route</param>
         public void AddRoute(
             string destination, string gateway, string netmask, 
             string iface, int metric

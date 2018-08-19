@@ -5,16 +5,34 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace GNS3sharp {
-    /*
-    Class that handles every link
-    */
+    /// <summary>
+    /// This class represents a link of a GNS3 project
+    /// <remarks>
+    /// This class can give you information about a link that is attached
+    /// to a node as well as edit it and change its parameters
+    /// </remarks>
+    /// </summary>
     public class Link{
-        // ID
-        private string id; public string ID { get => id; }
-        // Nodes the link connects
-        private Node[] nodes; public Node[] Nodes { get  => nodes; }
-        // Parameters of the link
-        private int frequencyDrop;              // th
+
+        private string id;
+        /// <summary>
+        /// ID the link has implicitly
+        /// </summary>
+        /// <value>String ID</value>
+        public string ID { get => id; }
+
+        private Node[] nodes;
+        /// <summary>
+        /// List of nodes that the link is connecting
+        /// </summary>
+        /// <value>List of <c>Node</value>
+        public Node[] Nodes { get  => nodes; }
+
+        private int frequencyDrop;
+        /// <summary>
+        /// Parameter that measure the frequency drop of the link
+        /// </summary>
+        /// <value>Throughput as an integer</value>
         public int FrequencyDrop { 
             get => frequencyDrop;
             private set {
@@ -22,7 +40,12 @@ namespace GNS3sharp {
                 else frequencyDrop = value;
             }
         }
-        private int packetLoss;                 // %
+
+        private int packetLoss;
+        /// <summary>
+        /// Parameter that measure the packet loss of the link
+        /// </summary>
+        /// <value>Percentage as an integer</value>
         public int PacketLoss { 
             get  => packetLoss;
             private set {
@@ -30,8 +53,13 @@ namespace GNS3sharp {
                 else if (value > 100) packetLoss = 100;
                 else packetLoss = value;
             }
-        }    
-        private int latency;                    // ms
+        }
+        
+        private int latency;
+        /// <summary>
+        /// Parameter that measure the latency of the link
+        /// </summary>
+        /// <value>ms as an integer</value>
         public int Latency {
             get => latency;
             private set {
@@ -39,7 +67,12 @@ namespace GNS3sharp {
                 else latency = value;
             }
         }
-        private int jitter;                     // ms
+
+        private int jitter;
+        /// <summary>
+        /// Parameter that measure the jitter of the link
+        /// </summary>
+        /// <value>ms as an integer</value>
         public int Jitter {
             get => jitter;
             private set {
@@ -47,7 +80,12 @@ namespace GNS3sharp {
                 else jitter = value;
             }
         }
-        private int corrupt;                    // %
+
+        private int corrupt;
+        /// <summary>
+        /// Parameter that measure the corruption of the link
+        /// </summary>
+        /// <value>Percentage as an integer</value>
         public int Corrupt {
             get {return corrupt;}
             private set {
@@ -56,21 +94,46 @@ namespace GNS3sharp {
                 else corrupt = value;
             }
         }
-        // Information about the server (host, port and projectID)
+
+        /// <summary>
+        /// Information about the server
+        /// </summary>
+        /// <value>Keys: host, port and projectID</value>
         private Dictionary<string,string> serverInfo;
-        // HTTP client used to interact with the REST API
+
+        /// <summary>
+        /// HTTP client used to interact with the REST API
+        /// </summary>
         private readonly HttpClient HTTPclient;
 
         ///////////////////////////// Constructors ////////////////////////////////////////////
 
-        // Constructor with all filters different from 0
-        public Link(string _id, Node[] _nodes, Dictionary<string, string> _serverInfo, HttpClient _HTTPclient){
+        /// <summary>
+        /// Constructs the object with all filters equal to 0
+        /// </summary>
+        /// <param name="_id">ID the link has implicitly</param>
+        /// <param name="_nodes">Array of nodes that the link is connecting</param>
+        /// <param name="_serverInfo">Information about the server (host, port and projectID)</param>
+        /// <param name="_HTTPclient">HTTP client used by the GNS3sharp object which creates this link</param>
+        internal Link(string _id, Node[] _nodes, Dictionary<string, string> _serverInfo, HttpClient _HTTPclient){
             id = _id; nodes = _nodes; serverInfo = _serverInfo; HTTPclient = _HTTPclient;
             frequencyDrop = 0; packetLoss = 0;
             latency = 0; jitter = 0; corrupt = 0;
         }
-        // Constructor with any filter different from 0
-        public Link(
+
+        /// <summary>
+        /// Constructs the object with some filter different from 0
+        /// </summary>
+        /// <param name="_id">ID the link has implicitly</param>
+        /// <param name="_nodes">Array of nodes that the link is connecting</param>
+        /// <param name="_serverInfo">Information about the server (host, port and projectID)</param>
+        /// <param name="_HTTPclient">HTTP client used by the GNS3sharp object which creates this link</param>
+        /// <param name="_frequencyDrop">Parameter that measure the frequency drop of the link</param>
+        /// <param name="_packetLoss">Parameter that measure the packet loss of the link</param>
+        /// <param name="_latency">Parameter that measure the latency of the link</param>
+        /// <param name="_jitter">Parameter that measure the jitter of the link</param>
+        /// <param name="_corrupt">Parameter that measure the corruption of the link</param>
+        internal Link(
             string _id, Node[] _nodes, Dictionary<string, string> _serverInfo, HttpClient _HTTPclient,
             int _frequencyDrop=0, int _packetLoss=0, int _latency=0, int _jitter=0, int _corrupt=0
             ){
@@ -80,10 +143,21 @@ namespace GNS3sharp {
         }
 
         ///////////////////////////////// Methods ////////////////////////////////////////////
+        
+        /// <summary>
+        /// Edit some filter of a link
+        /// </summary>
+        /// <param name="_frequencyDrop">Parameter that measure the frequency drop of the link</param>
+        /// <param name="_packetLoss">Parameter that measure the packet loss of the link</param>
+        /// <param name="_latency">Parameter that measure the latency of the link</param>
+        /// <param name="_jitter">Parameter that measure the jitter of the link</param>
+        /// <param name="_corrupt">Parameter that measure the corruption of the link</param>
+        /// <returns>True if everything went right, False otherwise</returns>
         public bool EditLink(
             int _frequencyDrop=-10, int _packetLoss=-10,
             int _latency=-10, int _jitter=-10, int _corrupt=-10
             ){
+
             // Return variable
             bool linkEdited;
 
@@ -105,7 +179,7 @@ namespace GNS3sharp {
                     {"delay", new int[2]{ this.latency, this.jitter }},
                     {"corrupt", new int[1]{this.corrupt}}
                 };
-                // URL where send the data
+                // URI where the data is going to be sent
                 string URL = (
                     $"http://{serverInfo["host"]}:{serverInfo["port"]}/v2/projects/{serverInfo["projectID"]}/links/{id}"
                 );
