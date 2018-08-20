@@ -20,17 +20,17 @@ namespace GNS3sharp {
         /// <value>Values of the dictionaries are the 'type' related to the chosen label</value>
         internal static Dictionary<string,object>[] nodesAvailables = {
             new Dictionary<string,object>(){
-                {"class", typeof(VPC)}, {"label", VPC.label}
+                {"class", typeof(VPC)}, {"label", VPC.Label}
             },  new Dictionary<string,object>(){
-                {"class", typeof(MicroCore)}, {"label", MicroCore.label}
+                {"class", typeof(MicroCore)}, {"label", MicroCore.Label}
             }, new Dictionary<string,object>(){
-                {"class", typeof(OpenvSwitch)}, {"label", OpenvSwitch.label}
+                {"class", typeof(OpenvSwitch)}, {"label", OpenvSwitch.Label}
             }, new Dictionary<string,object>(){
-                {"class", typeof(EthernetSwitch)}, {"label", EthernetSwitch.label}
+                {"class", typeof(EthernetSwitch)}, {"label", EthernetSwitch.Label}
             }, new Dictionary<string,object>(){
-                {"class", typeof(OpenWRT)}, {"label", OpenWRT.label}
+                {"class", typeof(OpenWRT)}, {"label", OpenWRT.Label}
             }, new Dictionary<string,object>(){
-                {"class", typeof(LEDE)}, {"label", LEDE.label}
+                {"class", typeof(LEDE)}, {"label", LEDE.Label}
             }
         };
 

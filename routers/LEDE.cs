@@ -4,8 +4,13 @@ using System.Collections.Generic;
 namespace GNS3sharp {
     public class LEDE : OpenWRT{
 
-        // Label to determine what device is
-        new public const string label = "LEDE";
+        private const string label = "LEDE";
+        /// <summary>
+        /// Label you must set in the name of the node at the GNS3 project
+        /// <para>Name of the node must look like "[LEDE]Name"</para>
+        /// </summary>
+        /// <value>Label as a string</value>
+        new public static string Label { get => label; }
 
         // Constructors
         public LEDE() : base() {}

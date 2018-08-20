@@ -250,7 +250,7 @@ namespace GNS3sharp {
         /// <summary>
         /// Send Ping to a certain IP
         /// </summary>
-        /// <param name="IP">IP where to send the ICMP packets to</param>
+        /// <param name="IP">IP where ICMP packets will be sent</param>
         /// <param name="count">Number of retries. By default 5</param>
         /// <returns>The result messages of the ping</returns>
         /// <example>
@@ -259,12 +259,12 @@ namespace GNS3sharp {
         ///     Console.WriteLine($"{line}");
         /// </code>
         /// </example>
-        public string[] Ping(string IP, ushort count=5){
+        public virtual string[] Ping(string IP, ushort count=5){
             return Ping(IP, $"-c {count.ToString()}");
         }
 
         /// <summary>
-        /// Send Ping to a certain IP. This method is used by overwritings of <c>Ping()</c>
+        /// Template child classes can used a template for creating 'Ping''s with different parameters
         /// </summary>
         /// <param name="IP">IP where to send the ICMP packets to</param>
         /// <param name="additionalParameters">Additional parameters for the ping</param>

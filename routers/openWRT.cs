@@ -4,8 +4,13 @@ using System.Collections.Generic;
 namespace GNS3sharp {
     public class OpenWRT : Router{
 
-        // Label to determine what device is
-        public const string label = "OPENWRT";
+        private const string label = "OPENWRT";
+        /// <summary>
+        /// Label you must set in the name of the node at the GNS3 project
+        /// <para>Name of the node must look like "[OPENWRT]Name"</para>
+        /// </summary>
+        /// <value>Label as a string</value>
+        public static string Label { get => label; }
 
         public override RoutingTable RoutingTable { 
             get => this.GetRoutingTable(this.GetRoutingTable());
@@ -78,7 +83,7 @@ namespace GNS3sharp {
         }
 
         // Get the routing table of the router as an array of strings
-        public override string[] GetRoutingTable(){
+        protected override string[] GetRoutingTable(){
             // Reception variable as a string
             string[] in_txt = null;
 

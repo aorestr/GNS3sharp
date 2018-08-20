@@ -6,8 +6,13 @@ using System.Collections.Generic;
 namespace GNS3sharp {
     public class VPC : Guest{
 
-        // In the name of the node: [label]Name
-        public const string label = "VPC";
+        private const string label = "VPC";
+        /// <summary>
+        /// Label you must set in the name of the node at the GNS3 project
+        /// <para>Name of the node must look like "[VPC]Name"</para>
+        /// </summary>
+        /// <value>Label as a string</value>
+        public static string Label { get => label; }
 
         // Constructors
         public VPC() : base() {}
