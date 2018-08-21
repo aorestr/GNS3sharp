@@ -13,8 +13,8 @@ namespace GNS3sharp {
         new public static string Label { get => label; }
 
         // Constructors
-        public LEDE() : base() {}
-        public LEDE(string _consoleHost, ushort _port, string _name, string _id,
+        internal LEDE() : base() {}
+        internal LEDE(string _consoleHost, ushort _port, string _name, string _id,
             Dictionary<string,dynamic>[] _ports) : 
             base(_consoleHost, _port, _name, _id, _ports){}
         public LEDE(Node father) : base(father){}

@@ -14,8 +14,8 @@ namespace GNS3sharp {
         public static string Label { get => label; }
 
         // Constructors
-        public MicroCore() : base() {}
-        public MicroCore(string _consoleHost, ushort _port, string _name, string _id,
+        internal MicroCore() : base() {}
+        internal MicroCore(string _consoleHost, ushort _port, string _name, string _id,
             Dictionary<string,dynamic>[] _ports) : 
             base(_consoleHost, _port, _name, _id, _ports){}
         public MicroCore(Node father) : base(father){}

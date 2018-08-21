@@ -5,8 +5,8 @@ namespace GNS3sharp {
     public abstract class Guest : Node{
 
         // Constructors
-        public Guest() : base() {}
-        public Guest(string _consoleHost, ushort _port, string _name, string _id,
+        internal Guest() : base() {}
+        internal Guest(string _consoleHost, ushort _port, string _name, string _id,
             Dictionary<string,dynamic>[] _ports) : 
             base(_consoleHost, _port, _name, _id, _ports){}
         public Guest(Node clone) : base(clone){}

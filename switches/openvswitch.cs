@@ -21,7 +21,7 @@ namespace GNS3sharp {
         /// <summary>
         /// Constructor by default. Every property is empty
         /// </summary>
-        public OpenvSwitch() : base() {}
+        internal OpenvSwitch() : base() {}
 
         /// <summary>
         /// Constructor for any kind of <c>Node</c>. It must be called from a <c>GNS3sharp</c> object
@@ -31,7 +31,7 @@ namespace GNS3sharp {
         /// <param name="_name">Name of the node stablished in the project</param>
         /// <param name="_id">ID the node has implicitly</param>
         /// <param name="_ports">Array of dictionaries that contains information about every network interface</param>
-        public OpenvSwitch(string _consoleHost, ushort _port, string _name, string _id,
+        internal OpenvSwitch(string _consoleHost, ushort _port, string _name, string _id,
             Dictionary<string,dynamic>[] _ports) : 
             base(_consoleHost, _port, _name, _id, _ports){}
 

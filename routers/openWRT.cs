@@ -17,8 +17,8 @@ namespace GNS3sharp {
         }
 
         // Constructors
-        public OpenWRT() : base() {}
-        public OpenWRT(string _consoleHost, ushort _port, string _name, string _id,
+        internal OpenWRT() : base() {}
+        internal OpenWRT(string _consoleHost, ushort _port, string _name, string _id,
             Dictionary<string,dynamic>[] _ports) : 
             base(_consoleHost, _port, _name, _id, _ports){}
         public OpenWRT(Node father) : base(father){}
