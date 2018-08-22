@@ -202,6 +202,9 @@ namespace GNS3sharp {
         /// <summary>
         /// Receive messages from the buffer of the node network stream
         /// </summary>
+        /// <param name="timeBetweenReads">
+        /// Seconds the method will wait for reading between messages in the server. By default is 2s
+        /// </param>
         /// <returns>Messages as an array of strings</returns>
         /// <example>
         /// <code>
@@ -209,10 +212,12 @@ namespace GNS3sharp {
         ///     Console.WriteLine("${line}");
         /// </code>
         /// </example>
-        public string[] Receive(){
+        public string[] Receive(int timeBetweenReads = 2){
 
             // Reception variable as a string split by \n
             string[] in_txt_split = null;
+
+            timeBetweenReads *= 1000;
 
             if (this.tcpConnection != null)
                 (this.tcpConnection, this.netStream) = this.Connect();
@@ -238,7 +243,7 @@ namespace GNS3sharp {
                         }
                     } while (this.netStream.DataAvailable);
                     // We need to wait for the server to process our messages
-                    Thread.Sleep(2000);
+                    Thread.Sleep(timeBetweenReads);
                 // We double check the availability of data 
                 } while (this.netStream.DataAvailable);
                 // Remove all the unnecesary characters contained in the buffer and split the text we have received in \n

@@ -39,7 +39,7 @@ namespace GNS3sharp {
         /// Constructor that replicates a switch from another node
         /// </summary>
         /// <param name="clone">Node you want to make the copy from</param>
-        public EthernetSwitch(Node father) : base(father){}
+        public EthernetSwitch(Node clone) : base(clone){}
 
     }
 }

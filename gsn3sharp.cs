@@ -7,23 +7,42 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace GNS3sharp {
-    /*
-        Main class of the namespace. It contains plenty of methods and properties to handle your GNS3 projects
-    */
+    
+    /// <summary>
+    /// Main class of the namespace. Handles a GNS3 project through its methods. You can list all the nodes
+    /// of the project, activate them all at once...
+    /// </summary>
+    /// <remarks>
+    /// Contains several methods to interact with a GNS3 project
+    /// </remarks>
     public class GNS3sharp {
 
-        // Project ID
-        private string projectID; public string ProjectID{ get => projectID; }
+        private string projectID;
+        /// <summary>
+        /// ID of the project that the object is handling
+        /// </summary>
+        /// <value>String ID</value>
+        public string ProjectID{ get => projectID; }
 
-        // GNS3 server host
-        private string host; public string Host{ get => host; }
+        private string host;
+        /// <summary>
+        /// IP where the GNS3 server is hosted
+        /// </summary>
+        /// <value>String IP</value>
+        public string Host{ get => host; }
 
-        // GNS3 server port
-        private ushort port; public ushort Port{ get => port; }
-
-        // List of nodes inside the project with all the info about them.
-        // The info is not filtered
+        private ushort port;
+        /// <summary>
+        /// Port where the server is hosted
+        /// </summary>
+        /// <value>Port number</value>
+        public ushort Port{ get => port; }
+        
         private List<Dictionary<string,object>> nodesJSON;
+        /// <summary>
+        /// JSON list with info about the nodes inside the project. The list is not filtered
+        /// </summary>
+        /// <value>Dictionary: key is the node field and the value its value</value>
         public List<Dictionary<string,object>> NodesJSON{
             get {
                 ExtractNodesDictionary(
@@ -33,7 +52,10 @@ namespace GNS3sharp {
             }
         }
 
-        // Same for the links
+        /// <summary>
+        /// JSON list with info about the links inside the project. The list is not filtered
+        /// </summary>
+        /// <value>Dictionary: key is the link field and the value its value</value>
         private List<Dictionary<string,object>> linksJSON;
         public List<Dictionary<string,object>> LinksJSON{
             get {
@@ -44,26 +66,50 @@ namespace GNS3sharp {
             }
         }
 
-        // List of nodes the project has
-        private Node[] nodes; public Node[] Nodes{ get => nodes; }
+        private Node[] nodes;
+        /// <summary>
+        /// List of nodes contained in the project
+        /// </summary>
+        /// <value>Array of <c>Node</c></value>
+        public Node[] Nodes{ get => nodes; }
 
-        // List of links the project has. We will use a struct
-        private List<Link> links; public List<Link> Links{ get => links; }
+        private List<Link> links;
+        /// <summary>
+        /// List of links contained in the project
+        /// </summary>
+        /// <value>List of <c>Link</c></value>
+        public List<Link> Links{ get => links; }
 
-        // These dictionaries will help getting the nodes by name and ID
+        /// <summary>
+        /// Map between nodes and their names
+        /// </summary>
+        /// <returns>Dictionary. The key is the name of the node and the value its object</returns>
         private Dictionary<string, Node> nodesByName = new Dictionary<string, Node>();
+
+        /// <summary>
+        /// Map between nodes and their IDs
+        /// </summary>
+        /// <returns>Dictionary. The key is the ID of the node and the value its object</returns>
         private Dictionary<string, Node> nodesByID = new Dictionary<string, Node>();
 
-        // HTTP client used to interact with the REST API
+        /// <summary>
+        /// HTTP client used to interact with the REST API
+        /// </summary>
         private static readonly HttpClient HTTPclient = new HttpClient();
 
         ///////////////////////////// Constructors ////////////////////////////////////////////
 
-        // Wrong constructor. It needs an ID for the project
-        public GNS3sharp() => Console.Error.WriteLine("You need the project ID");
+        /// <summary>
+        /// Wrong constructor. It can not be accessed
+        /// </summary>
+        private GNS3sharp() => Console.Error.WriteLine("You need the project ID");
 
-        // Right constructor. Needs the project ID. Just get the nodes
-        // the project has
+        /// <summary>
+        /// Take all the necessary info from a GNS3 project. Initialize a handler object that allows to manage the project
+        /// </summary>
+        /// <param name="_projectID">ID of the GNS3 project</param>
+        /// <param name="_host">Addres where the GNS3 server is. By default is "localhost"</param>
+        /// <param name="_port">Port of the host where the GNS3 server is. By default is 3080</param>
         public GNS3sharp(string _projectID, string _host = "localhost", ushort _port = 3080) {
             this.projectID = _projectID; this.host = _host; this.port = _port;
             // Defines the URL where the info is
@@ -95,31 +141,43 @@ namespace GNS3sharp {
 
         ///////////////////////////////// Methods ////////////////////////////////////////////
 
-        // It returns a dictionary with information about the nodes of the project
-        private void ExtractNodesDictionary(string URL){
-            nodesJSON = ExtractDictionary(URL, "z");    
+        /// <summary>
+        /// Return a dictionary with all the info about nodes downloaded it from the GNS3 server
+        /// </summary>
+        /// <param name="URI">Where the resource (a JSON) is in the server</param>
+        private void ExtractNodesDictionary(string URI){
+            nodesJSON = ExtractDictionary(URI, "z");    
         }
 
-        // It returns a dictionary with information about the project
-        private void ExtractLinksDictionary(string URL){
-            linksJSON = ExtractDictionary(URL, "suspend");    
+        /// <summary>
+        /// Return a dictionary with all the info about links downloaded it from the GNS3 server
+        /// </summary>
+        /// <param name="URI">Where the resource (a JSON) is in the server</param>
+        private void ExtractLinksDictionary(string URI){
+            linksJSON = ExtractDictionary(URI, "suspend");    
         }
 
         // It returns a dictionary with information about the nodes of the project
-        internal static List<Dictionary<string,object>> ExtractDictionary(string URL, string lastElement){
+        /// <summary>
+        /// Download and extract information from a JSON contained at a certain URI in the server
+        /// </summary>
+        /// <param name="URI">Where the resource (a JSON) is in the server</param>
+        /// <param name="lastKey">Last key of the array of elements in the JSON</param>
+        /// <returns></returns>
+        internal static List<Dictionary<string,object>> ExtractDictionary(string URI, string lastKey){
             
             // Extract a JSON from a GET request
-            string ExtractJSONString(string local_URL){
+            string ExtractJSONString(string local_URI){
                 // Variable with a string with all the JSON info
                 string local_json;
                 try{
                     // Get the info from the JSON file you can access from the GNS3 Rest service
                     using (System.Net.WebClient GNS3NodesProject = new System.Net.WebClient()){
-                        local_json = GNS3NodesProject.DownloadString(local_URL);
+                        local_json = GNS3NodesProject.DownloadString(local_URI);
                     }
                 } catch(Exception err){
                     // Server not open
-                    Console.Error.WriteLine("Impossible to connect to URL {0}: {1}", local_URL, err.Message);
+                    Console.Error.WriteLine("Impossible to connect to URL {0}: {1}", local_URI, err.Message);
                     local_json = null;
                 }
 
@@ -127,7 +185,7 @@ namespace GNS3sharp {
             }
 
             // Raw string
-            string json = ExtractJSONString(URL);
+            string json = ExtractJSONString(URI);
 
             // Creates a list of dictionaries. It will be used to store the JSON info and
             // get the values from it
@@ -136,7 +194,7 @@ namespace GNS3sharp {
                 Console.Error.WriteLine("JSON is empty");
                 dictList = null;
             } else if (string.IsNullOrEmpty(json) == false){
-                dictList = DeserializeJSONList(json, lastElement);
+                dictList = DeserializeJSONList(json, lastKey);
             } else{
                 dictList = null;
             }
@@ -144,8 +202,12 @@ namespace GNS3sharp {
 
         }
 
-        // Desearialize a certain JSON and store it in a list of dictionaries.
-        // lastKey indicates the last key of a dictionary
+        /// <summary>
+        /// Desearialize a certain JSON and store it in a list of dictionaries.
+        /// </summary>
+        /// <param name="json">JSON downloaded from the server as a string</param>
+        /// <param name="lastKey">Last key of the array of elements in the JSON</param>
+        /// <returns></returns>
         private static List<Dictionary<string,object>> DeserializeJSONList(string json, string lastKey){
             
             // Return variable
@@ -177,8 +239,10 @@ namespace GNS3sharp {
             return dictList;
         }
         
-        // Save a list in every node with information about the links that are
-        // atrached to them
+        /// <summary>
+        /// Save information within a <c>Node</c> property of links attached to it
+        /// </summary>
+        /// <param name="listOfLinks">List of links which attached nodes will store the information of the links</param>
         private void SaveLinksInfoInNodes(List<Link> listOfLinks){
             foreach (Link link in listOfLinks){
                 foreach(Node node in link.Nodes){
@@ -188,8 +252,11 @@ namespace GNS3sharp {
             }
         }
 
-        // Given a certain link and its nodes JSON string, add the link into the
-        // correct port of the nodes
+        /// <summary>
+        /// Given a certain link and its nodes JSON string, add the link into the correct port of the nodes
+        /// </summary>
+        /// <param name="link">A concrete link</param>
+        /// <param name="nodesJSON">JSON as a string which has information about the nodes attached to the link</param>
         private void MatchLinkWithNodePorts(Link link, string nodesJSON){
             
             List<Dictionary<string,object>> dictList = null;
@@ -225,7 +292,11 @@ namespace GNS3sharp {
 
         }
 
-        // Create an array with the nodes. Each element is a Node instance
+        /// <summary>
+        /// Create an array with the nodes in the project
+        /// </summary>
+        /// <param name="JSON">JSON with the information about nodes as dictionary</param>
+        /// <returns>An array of nodes</returns>
         private Node[] GetNodes(List<Dictionary<string,object>> JSON){
             // Return variable
             Node[] listOfNodes = new Node[JSON.Count];
@@ -292,7 +363,11 @@ namespace GNS3sharp {
             return listOfNodes;
         }
 
-        // Create an array with the links. It contains information about the
+        /// <summary>
+        /// Create an array with the links in the project
+        /// </summary>
+        /// <param name="JSON">JSON with the information about links as dictionary</param>
+        /// <returns>An array of links</returns>
         private List<Link> GetLinks(List<Dictionary<string,object>> JSON){
             // Return variable
             List<Link> listOfLinks = new List<Link>();
@@ -392,17 +467,27 @@ namespace GNS3sharp {
             return listOfLinks;
         }
 
-        // Initialize all the nodes in the project
+        /// <summary>
+        /// Initialize all nodes in the GNS3 project
+        /// </summary>
+        /// <returns>Array of booleans. Every element determines whether the node has been succesfully started or not</returns>
         public bool[] StartProject(){
             return ChangeProjectStatus("start");
         }
 
-        // Stop all the nodes in the project
+        /// <summary>
+        /// Stop all nodes in the GNS3 project
+        /// </summary>
+        /// <returns>Array of booleans. Every element determines whether the node has been succesfully stopped or not</returns>
         public bool[] StopProject(){
             return ChangeProjectStatus("stop");
         }
 
-        // Change the status of the project (start or stop)
+        /// <summary>
+        /// Change the status of the project
+        /// </summary>
+        /// <param name="status">"start" or "stop"</param>
+        /// <returns>Array of booleans. Every element determines whether the node has succesfully changed its status or not</returns>
         private bool[] ChangeProjectStatus(string status){
 
             // String with all the messages received
@@ -421,51 +506,64 @@ namespace GNS3sharp {
             return changeOK;
         }
 
-        // Initialize a single node
+        /// <summary>
+        /// Initialize a single node
+        /// </summary>
+        /// <param name="node">Node that will be initialized</param>
+        /// <returns>True if the node was started, False otherwise</returns>
         public bool StartNode(Node node){
             return ChangeNodeStatus(node, "start");
         }
 
-        // Stop a single node
+        /// <summary>
+        /// Stop a single node
+        /// </summary>
+        /// <param name="node">Node that will be stopped</param>
+        /// <returns>True if the node was stopped, False otherwise</returns>
         public bool StopNode(Node node){
             return ChangeNodeStatus(node, "stop");
         }
 
-        // Change a single node status
+        /// <summary>
+        /// Change a single node status
+        /// </summary>
+        /// <param name="node">Node whose status will be switched</param>
+        /// <param name="status">"start" or "stop"</param>
+        /// <returns>True if the node status was switched, False otherwise</returns>
         private bool ChangeNodeStatus(Node node, string status){
             // Return variable
             bool responseStatus;
 
             if (node != null){
 
-                // First part of the URL
-                string URLHeader = $"http://{host}:{port}/v2/projects/{projectID}/nodes";
+            // First part of the URL
+            string URLHeader = $"http://{host}:{port}/v2/projects/{projectID}/nodes";
 
-                // Pack the content we will send
-                ByteArrayContent byteContent = null;
+            // Pack the content we will send
+            ByteArrayContent byteContent = null;
+            try{
+                string content = JsonConvert.SerializeObject(new Dictionary<string, string> { { "", "" } });
+                byteContent = new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(content));
+                byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            } catch(JsonSerializationException err){
+                Console.Error.WriteLine("Impossible to serialize the JSON to send it to the API: {0}", err.Message);
+            }
+
+            if (byteContent != null){
                 try{
-                    string content = JsonConvert.SerializeObject(new Dictionary<string, string> { { "", "" } });
-                    byteContent = new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(content));
-                    byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                } catch(JsonSerializationException err){
-                    Console.Error.WriteLine("Impossible to serialize the JSON to send it to the API: {0}", err.Message);
-                }
-
-                if (byteContent != null){
-                    try{
-                        responseStatus = HTTPclient.PostAsync(
-                            $"{URLHeader}/{node.ID}/{status}", byteContent
-                        ).Result.IsSuccessStatusCode;
-                    } catch(HttpRequestException err){
-                        Console.Error.WriteLine("Some problem occured with the HTTP connection: {0}", err.Message);
-                        responseStatus = false;
-                    } catch(Exception err){
-                        Console.Error.WriteLine("Impossible to {2} node {0}: {1}", node.Name, err.Message, status);
-                        responseStatus = false;
-                    }
-                } else{
+                    responseStatus = HTTPclient.PostAsync(
+                        $"{URLHeader}/{node.ID}/{status}", byteContent
+                    ).Result.IsSuccessStatusCode;
+                } catch(HttpRequestException err){
+                    Console.Error.WriteLine("Some problem occured with the HTTP connection: {0}", err.Message);
+                    responseStatus = false;
+                } catch(Exception err){
+                    Console.Error.WriteLine("Impossible to {2} node {0}: {1}", node.Name, err.Message, status);
                     responseStatus = false;
                 }
+            } else{
+                responseStatus = false;
+            }
             } else {
                 Console.Error.WriteLine("Impossible to {1} node {0}: the node is null", node.Name, status);
                 responseStatus = false;
@@ -475,8 +573,17 @@ namespace GNS3sharp {
 
         }
 
-        // Create a new link. Needs the nodes the link will attach. It takes a free port
-        // of each one automatically
+        /// <summary>
+        /// Create a new link in the project between two nodes
+        /// </summary>
+        /// <param name="node1">Node 1 where the link will be attached</param>
+        /// <param name="node2">Node 2 where the link will be attached</param>
+        /// <param name="frequencyDrop">Parameter that measure the frequency drop of the link</param>
+        /// <param name="packetLoss">Parameter that measure the packet loss of the link</param>
+        /// <param name="latency">Parameter that measure the latency of the link</param>
+        /// <param name="jitter">Parameter that measure the jitter of the link</param>
+        /// <param name="corrupt">Parameter that measure the corruption of the link</param>
+        /// <returns></returns>
         public bool SetLink(Node node1, Node node2, 
             int frequencyDrop=0, int packetLoss=0,
             int latency=0, int jitter=0, int corrupt=0){
@@ -599,7 +706,12 @@ namespace GNS3sharp {
             return linkCreated;
         }
 
-        // Find the link two nodes share
+        /// <summary>
+        /// Find the link two nodes share
+        /// </summary>
+        /// <param name="node1">Node 1</param>
+        /// <param name="node2">Node 2</param>
+        /// <returns>The link that connects node1 and node2, or null if nothing could be found</returns>
         public Link GetLinkByNodes(Node node1, Node node2){
             // Return variable
             Link link;
@@ -627,7 +739,16 @@ namespace GNS3sharp {
             return link;
         }
 
-        // Edit a link according to the parameters introduced
+        /// <summary>
+        /// Edit a link according to the parameters introduced
+        /// </summary>
+        /// <param name="link">Link whose parameters are going to be changed</param>
+        /// <param name="frequencyDrop">Parameter that measure the frequency drop of the link</param>
+        /// <param name="packetLoss">Parameter that measure the packet loss of the link</param>
+        /// <param name="latency">Parameter that measure the latency of the link</param>
+        /// <param name="jitter">Parameter that measure the jitter of the link</param>
+        /// <param name="corrupt">Parameter that measure the corruption of the link</param>
+        /// <returns>True if the operation was succesfully completed, False otherwise</returns>
         public bool EditLink(Link link,
             int frequencyDrop=-10, int packetLoss=-10,
             int latency=-10, int jitter=-10, int corrupt=-10
@@ -645,7 +766,17 @@ namespace GNS3sharp {
             return linkEdited;
         }
 
-        // Edit a link according to the parameters introduced
+        /// <summary>
+        /// Edit a link according to the parameters introduced
+        /// </summary>
+        /// <param name="node1">Node 1 attached to the link</param>
+        /// <param name="node2">Node 2 attached to the link</param>
+        /// <param name="frequencyDrop">Parameter that measure the frequency drop of the link</param>
+        /// <param name="packetLoss">Parameter that measure the packet loss of the link</param>
+        /// <param name="latency">Parameter that measure the latency of the link</param>
+        /// <param name="jitter">Parameter that measure the jitter of the link</param>
+        /// <param name="corrupt">Parameter that measure the corruption of the link</param>
+        /// <returns>True if the operation was succesfully completed, False otherwise</returns>
         public bool EditLink(Node node1, Node node2,
             int frequencyDrop=-10, int packetLoss=-10,
             int latency=-10, int jitter=-10, int corrupt=-10
@@ -668,7 +799,11 @@ namespace GNS3sharp {
 
         }
 
-        // Remove a link of the project
+        /// <summary>
+        /// Remove a link from the project
+        /// </summary>
+        /// <param name="link">Link to remove</param>
+        /// <returns>True if the operation was succesfully completed, False otherwise</returns>
         public bool RemoveLink(Link link){
             // Return variable
             bool linkRemoved;
@@ -702,7 +837,12 @@ namespace GNS3sharp {
             return linkRemoved;
         }
 
-        // Remove a link of the project
+        /// <summary>
+        /// Remove a link from the project
+        /// </summary>
+        /// <param name="node1">Node 1 attached to the link</param>
+        /// <param name="node2">Node 2 attached to the link</param>
+        /// <returns>True if the operation was succesfully completed, False otherwise</returns>
         public bool RemoveLink(Node node1, Node node2){
             // Return variable
             bool linkRemoved;
@@ -717,9 +857,11 @@ namespace GNS3sharp {
             return linkRemoved;
         }
 
-        // Find the element that corresponds to a certain name.
-        // A casting is compulsory in order to use the Node submethods.
-        // Returns null if it can't be matched
+        /// <summary>
+        /// Find the node that corresponds to a certain name
+        /// </summary>
+        /// <param name="name">Name of the node to find</param>
+        /// <returns>Node found. A casting to the concrete type of node is compulsory in order to use its methods. Returns null if nothing could be found</returns>
         public Node GetNodeByName(string name){
             
             Node foundNode = null;
@@ -730,9 +872,11 @@ namespace GNS3sharp {
 
         }
 
-        // Find the element that corresponds to a certain ID.
-        // A casting is compulsory in order to use the Node submethods.
-        // Returns null if it can't be matched
+        /// <summary>
+        /// Find the node that corresponds to a certain ID
+        /// </summary>
+        /// <param name="ID">ID of the node to find</param>
+        /// <returns>Node found. A casting to the concrete type of node is compulsory in order to use its methods. Returns null if nothing could be found</returns>
         public Node GetNodeByID(string ID){
             
             Node foundNode = null;

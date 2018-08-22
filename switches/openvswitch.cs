@@ -39,7 +39,7 @@ namespace GNS3sharp {
         /// Constructor that replicates a switch from another node
         /// </summary>
         /// <param name="clone">Node you want to make the copy from</param>
-        public OpenvSwitch(Node father) : base(father){}
+        public OpenvSwitch(Node clone) : base(clone){}
 
     }
 }

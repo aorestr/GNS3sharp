@@ -2,6 +2,13 @@ using System;
 using System.Collections.Generic;
 
 namespace GNS3sharp {
+
+    /// <summary>
+    /// Representation of a OpenWRT type of node
+    /// <remarks>
+    /// Define methods that are only available for this appliance
+    /// </remarks>
+    /// </summary>
     public class OpenWRT : Router{
 
         private const string label = "OPENWRT";
@@ -12,23 +19,51 @@ namespace GNS3sharp {
         /// <value>Label as a string</value>
         public static string Label { get => label; }
 
+        /// <summary>
+        /// Routing table of the node as an object
+        /// </summary>
+        /// <value>Object of type <c>RoutingTable</c></value>
         public override RoutingTable RoutingTable { 
             get => this.GetRoutingTable(this.GetRoutingTable());
         }
 
-        // Constructors
+        /// <summary>
+        /// Constructor by default. Every property is empty
+        /// </summary>
         internal OpenWRT() : base() {}
+
+        /// <summary>
+        /// Constructor for any kind of <c>Node</c>. It must be called from a <c>GNS3sharp</c> object
+        /// </summary>
+        /// <param name="_consoleHost">IP of the machine where the node is hosted</param>
+        /// <param name="_port">Port of the machine where the node is hosted</param>
+        /// <param name="_name">Name of the node stablished in the project</param>
+        /// <param name="_id">ID the node has implicitly</param>
+        /// <param name="_ports">Array of dictionaries that contains information about every network interface</param>
         internal OpenWRT(string _consoleHost, ushort _port, string _name, string _id,
             Dictionary<string,dynamic>[] _ports) : 
             base(_consoleHost, _port, _name, _id, _ports){}
-        public OpenWRT(Node father) : base(father){}
 
-        // This routers' terminal needs to be initialize with a \n
+        /// <summary>
+        /// Constructor that replicates a router from another node
+        /// </summary>
+        /// <param name="clone">Node you want to make the copy from</param>
+        public OpenWRT(Node clone) : base(clone){}
+
+        /// <summary>
+        /// Force the terminal to allow messages by sending a first \n. You should wait for the router to finish of configuring though
+        /// </summary>
         private void ActivateTerminal(){
             Send("");
         }
 
-        // Activate an interface of the router
+        /// <summary>
+        /// Activate an interface of the router
+        /// </summary>
+        /// <param name="IP">IPv4 you plan to set</param>
+        /// <param name="netmask">Netmask of the address. By default "255.255.255.0"</param>
+        /// <param name="interfaceNumber">Interface number (eth#). By default is 0</param>
+        /// <returns>Received message as an array of strings</returns>
         public override string[] ActivateInterface(
             string IP, string netmask = "255.255.255.0", ushort interfaceNumber = 0
             ){
@@ -43,6 +78,14 @@ namespace GNS3sharp {
         }
 
         // Change the status of an interface to 'up' or 'down'
+        /// <summary>
+        /// Change the status of an interface to 'up' or 'down'
+        /// </summary>
+        /// <param name="status">"up" or "down</param>
+        /// <param name="IP">IPv4 you plan to set</param>
+        /// <param name="netmask">Netmask of the address. By default "255.255.255.0"</param>
+        /// <param name="interfaceNumber">Interface number (eth#). By default is 0</param>
+        /// <returns>Received message as an array of strings</returns>
         private string[] ChangeInterfaceStatus(
             string status, string IP, string netmask = "255.255.255.0", ushort interfaceNumber = 0
             ){
@@ -63,7 +106,13 @@ namespace GNS3sharp {
             return in_txt;
         }
 
-        // Set a route to a cerrtain destination through a gateway
+        /// <summary>
+        /// Set a route to a certain destination through a gateway
+        /// </summary>
+        /// <param name="destination">Address where the route is planned to get</param>
+        /// <param name="gateway">Gateway where the packets must initially go through to reach the destination</param>
+        /// <param name="netmask">Netmask of the IP. By default "255.255.255.0"</param>
+        /// <returns>Received message as an array of strings</returns>
         public override string[] SetRoute(string destination, string gateway, string netmask = "255.255.255.0"){
             // Reception variable as a string
             string[] in_txt = null;
@@ -82,7 +131,10 @@ namespace GNS3sharp {
             return in_txt;
         }
 
-        // Get the routing table of the router as an array of strings
+        /// <summary>
+        /// Get the routing table of the router
+        /// </summary>
+        /// <returns>The routing table as an array of strings</returns>
         protected override string[] GetRoutingTable(){
             // Reception variable as a string
             string[] in_txt = null;
@@ -95,8 +147,11 @@ namespace GNS3sharp {
             return in_txt;
         }
 
-        // Get the routing table of the router as a RoutingTable object.
-        // It's used to get the RoutingTable property of the class
+        /// <summary>
+        /// Get the routing table of the router as a RoutingTable object. It's used to get the RoutingTable property of the class
+        /// </summary>
+        /// <param name="routingTable">Routing table as a string</param>
+        /// <returns>The routing table</returns>
         private RoutingTable GetRoutingTable(string[] routingTable){
             RoutingTable table = new RoutingTable();
 
@@ -133,17 +188,27 @@ namespace GNS3sharp {
             return table;
         }
 
-        // (Re)Start the firewall
+        /// <summary>
+        /// (Re)start the router firewall
+        /// </summary>
+        /// <returns>Received message as an array of strings</returns>
         public virtual string[] EnableFirewall(){
             return ChangeFirewallStatus("start");
         }
 
-        // Stop the firewall
+        /// <summary>
+        /// Stop the router firewall
+        /// </summary>
+        /// <returns>Received message as an array of strings</returns>
         public virtual string[] DisableFirewall(){
             return ChangeFirewallStatus("stop");
         }
 
-        // Change firewall status to start or stop
+        /// <summary>
+        /// Change router status
+        /// </summary>
+        /// <param name="newStatus">"start" or "stop"</param>
+        /// <returns></returns>
         private string[] ChangeFirewallStatus(string newStatus){
             // Reception variable as a string
             string[] in_txt = null;
@@ -156,8 +221,11 @@ namespace GNS3sharp {
             return in_txt;
         }
 
-        // Get the IP related to a certain interface. The first parameter
-        // of the list is the IP and the second one is the netmask
+        /// <summary>
+        /// Get the IPv4 related to a certain interface. Needs overwriting.
+        /// </summary>
+        /// <param name="iface">Interface whose IPv4 will be searched</param>
+        /// <returns>Array of strings: first corresponds to the IP nad second to the netmask</returns>
         public override string[] GetIPByInterface(string iface){
 
             string GetParameterIfconfig(string _iface, string type){

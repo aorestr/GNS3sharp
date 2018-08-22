@@ -19,7 +19,7 @@ namespace GNS3sharp {
         internal VPC(string _consoleHost, ushort _port, string _name, string _id,
             Dictionary<string,dynamic>[] _ports) : 
             base(_consoleHost, _port, _name, _id, _ports){}
-        public VPC(Node father) : base(father){}
+        public VPC(Node clone) : base(clone){}
 
         // Show arp table
         public string[] ShowArp(){

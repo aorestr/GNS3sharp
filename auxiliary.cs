@@ -4,9 +4,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace GNS3sharp {
-    /*
-    Defines some methods that are helpful for other classes
-    */
+
     /// <summary>
     /// Class that defines some methods and propertiesthat are helpful for
     /// the other classes of the namespace

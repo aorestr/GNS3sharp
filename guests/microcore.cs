@@ -18,7 +18,7 @@ namespace GNS3sharp {
         internal MicroCore(string _consoleHost, ushort _port, string _name, string _id,
             Dictionary<string,dynamic>[] _ports) : 
             base(_consoleHost, _port, _name, _id, _ports){}
-        public MicroCore(Node father) : base(father){}
+        public MicroCore(Node clone) : base(clone){}
 
         // Set an IP for the MicroCore
         public override string[] SetIP(

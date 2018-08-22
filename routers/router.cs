@@ -82,7 +82,7 @@ namespace GNS3sharp {
         public abstract string[] SetRoute(string destination, string gateway, string netmask = "255.255.255.0");
 
         /// <summary>
-        /// Gets the routing table of the router
+        /// Get the routing table of the router
         /// </summary>
         /// <returns>The routing table as an array of strings</returns>
         protected abstract string[] GetRoutingTable();
