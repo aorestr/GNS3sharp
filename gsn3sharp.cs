@@ -2,6 +2,7 @@ using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -163,7 +164,7 @@ namespace GNS3sharp {
         /// </summary>
         /// <param name="URI">Where the resource (a JSON) is in the server</param>
         /// <param name="lastKey">Last key of the array of elements in the JSON</param>
-        /// <returns></returns>
+        /// <returns>List of dictionaries which correspond to an array of JSONs</returns>
         internal static List<Dictionary<string,object>> ExtractDictionary(string URI, string lastKey){
             
             // Extract a JSON from a GET request
@@ -207,7 +208,7 @@ namespace GNS3sharp {
         /// </summary>
         /// <param name="json">JSON downloaded from the server as a string</param>
         /// <param name="lastKey">Last key of the array of elements in the JSON</param>
-        /// <returns></returns>
+        /// <returns>List of dictionaries which correspond to an array of JSONs</returns>
         private static List<Dictionary<string,object>> DeserializeJSONList(string json, string lastKey){
             
             // Return variable
@@ -327,30 +328,37 @@ namespace GNS3sharp {
                 return ports.ToArray();
             }
 
-            Type classType; int i = 0;
+            ConstructorInfo ctor; int i = 0;
             try{
                 foreach(Dictionary<string, object> node in JSON){
                     try{
                         Console.WriteLine($"Gathering information for node #{i}... ");
-                        // Assign a class or another depending on the node
-                        classType = Aux.NodeType(node["name"].ToString());
-                        listOfNodes[i] = (Node)Activator.CreateInstance(
-                            classType,
-                            node["console_host"].ToString(), 
-                            ushort.Parse(node["console"].ToString()), 
-                            node["name"].ToString(),
-                            node["node_id"].ToString(),
-                            GetNodeListOfPorts(node)
+
+                        // Get the main constructor of the node type
+                        ctor = Aux.NodeType(node["name"].ToString()).GetConstructors(
+                            BindingFlags.NonPublic | BindingFlags.Instance
+                        ).Last();
+
+                        // Invoke the previous constructor and create the instance through it
+                        listOfNodes[i] = (Node)ctor.Invoke(
+                            new object[]{
+                                node["console_host"].ToString(), 
+                                ushort.Parse(node["console"].ToString()), 
+                                node["name"].ToString(),
+                                node["node_id"].ToString(),
+                                GetNodeListOfPorts(node)
+                            }
                         );
+                        
                         nodesByName.Add(listOfNodes[i].Name, listOfNodes[i]);
                         nodesByID.Add(listOfNodes[i].ID, listOfNodes[i]);
-                        i++;
                     } catch(Exception err1){
                         Console.Error.WriteLine(
                             "Impossible to save the configuration for the node #{0}: {1}", 
                             i.ToString(), err1.Message
                         );
                     }
+                    i++;
                 }
             } catch(Exception err2){
                 Console.Error.WriteLine(

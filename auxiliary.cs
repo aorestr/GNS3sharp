@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Linq;
+using System.Reflection;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
@@ -11,26 +13,61 @@ namespace GNS3sharp {
     /// </summary>
     internal static class Aux{
 
+        private static Dictionary<string,object>[] nodesAvailables = CreateNodesAvailable();
         /// <summary>
         /// Array of dictionaries. Every dictionary contains two keys: "class" and "label". If you create
         /// a new appliance class, you must add its label and type here
         /// </summary>
         /// <value>Values of the dictionaries are the 'type' related to the chosen label</value>
-        internal static Dictionary<string,object>[] nodesAvailables = {
-            new Dictionary<string,object>(){
-                {"class", typeof(VPC)}, {"label", VPC.Label}
-            },  new Dictionary<string,object>(){
-                {"class", typeof(MicroCore)}, {"label", MicroCore.Label}
-            }, new Dictionary<string,object>(){
-                {"class", typeof(OpenvSwitch)}, {"label", OpenvSwitch.Label}
-            }, new Dictionary<string,object>(){
-                {"class", typeof(EthernetSwitch)}, {"label", EthernetSwitch.Label}
-            }, new Dictionary<string,object>(){
-                {"class", typeof(OpenWRT)}, {"label", OpenWRT.Label}
-            }, new Dictionary<string,object>(){
-                {"class", typeof(LEDE)}, {"label", LEDE.Label}
+        internal static Dictionary<string,object>[] NodesAvailables { get => nodesAvailables; }
+
+        /// <summary>
+        /// Generate the dictionary for NodesAvailable property
+        /// </summary>
+        /// <returns>A map between the type of a node and its label</returns>
+        private static Dictionary<string,object>[] CreateNodesAvailable(){
+            
+            /// <summary>
+            /// List of all nodes defined in the API
+            /// </summary>
+            /// <returns>IEnumerable with the <c>Type</c> of the nodes</returns>
+            IEnumerable<Type> GetNodesTypes(){
+                
+                /// <summary>
+                /// Find the children classes of a class
+                /// </summary>
+                /// <typeparam name="TBaseType">Type whose children types must be found</typeparam>
+                /// <returns>IEnumerable with the <c>Type</c> of the nodes</returns>
+                IEnumerable<Type> FindSubClassesOf<TBaseType>() {   
+
+                    var baseType = typeof(TBaseType);
+                    var assembly = baseType.Assembly;
+
+                    return assembly.GetTypes().Where(t => t.IsSubclassOf(baseType));
+                }
+
+                var routers = FindSubClassesOf<Router>();
+                var guests = FindSubClassesOf<Switch>();
+                var switches = FindSubClassesOf<Guest>();
+
+                return routers.Concat(guests).Concat(switches);
             }
-        };
+
+            List<Dictionary<string,object>> typesOfNodes = new List<Dictionary<string,object>>();
+
+            foreach (var nodeType in GetNodesTypes()){
+                
+                typesOfNodes.Add(
+                    new Dictionary<string,object>(){
+                        {"class", nodeType},
+                        {"label", nodeType.GetProperty("Label", BindingFlags.Static | BindingFlags.Public).GetValue(null).ToString()}
+                    }
+                );
+
+            }
+
+            return typesOfNodes.ToArray();
+        }
 
         /// <summary>
         /// Return the right class type for a certain node. Try to match the label of the node
