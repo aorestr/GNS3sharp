@@ -70,14 +70,15 @@ namespace GNS3sharp {
             return ChangeInterfaceStatus("up", IP, netmask, interfaceNumber);
         }
 
-        // Dectivate an interface of the router
-        public override string[] DeactivateInterface(
-            string IP, string netmask = "255.255.255.0", ushort interfaceNumber = 0
-            ){
-            return ChangeInterfaceStatus("down", IP, netmask, interfaceNumber);
+        /// <summary>
+        /// Deactivate an interface of the router
+        /// </summary>
+        /// <param name="interfaceNumber">Interface number (eth#)</param>
+        /// <returns>Received message as an array of strings</returns>
+        public override string[] DeactivateInterface(ushort interfaceNumber){
+            return ChangeInterfaceStatus("down", null, null, interfaceNumber);
         }
 
-        // Change the status of an interface to 'up' or 'down'
         /// <summary>
         /// Change the status of an interface to 'up' or 'down'
         /// </summary>
@@ -92,13 +93,16 @@ namespace GNS3sharp {
             // Reception variable as a string
             string[] in_txt = null;
 
-            if(!Aux.IsIP(IP)) {
+            if(IP != null && !Aux.IsIP(IP)) {
                 Console.Error.WriteLine($"{IP} is not a valid IP");
-            } else if(!Aux.IsNetmask(netmask)){ 
+            } else if(netmask != null && !Aux.IsNetmask(netmask)){ 
                 Console.Error.WriteLine($"{netmask} is not a valid netmask");
             } else{
                 ActivateTerminal();
-                Send($"ifconfig eth{interfaceNumber.ToString()} {IP} netmask {netmask} {status}");
+                if (IP == null && netmask == null)
+                    Send($"ifconfig eth{interfaceNumber.ToString()} {status}");
+                else
+                    Send($"ifconfig eth{interfaceNumber.ToString()} {IP} netmask {netmask} {status}");
                 in_txt = Receive();
             }
 

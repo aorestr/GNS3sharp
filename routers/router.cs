@@ -64,13 +64,11 @@ namespace GNS3sharp {
         public abstract string[] ActivateInterface(string IP, string netmask = "255.255.255.0", ushort interfaceNumber = 0);
 
         /// <summary>
-        /// Dectivate an interface of the appliance. Needs overwriting
+        /// Deactivate an interface of the router
         /// </summary>
-        /// <param name="IP">IPv4 of the interface</param>
-        /// <param name="netmask">Netmask of the interface</param>
-        /// <param name="interfaceNumber">Number of the interface (0 for eth0...)</param>
-        /// <returns>The result of the operation as an array of strings</returns>
-        public abstract string[] DeactivateInterface(string IP, string netmask = "255.255.255.0", ushort interfaceNumber = 0);
+        /// <param name="interfaceNumber">Interface number (eth#)</param>
+        /// <returns>Received message as an array of strings</returns>
+        public abstract string[] DeactivateInterface(ushort interfaceNumber);
 
         /// <summary>
         /// Set a route for a certain network
