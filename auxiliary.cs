@@ -60,7 +60,7 @@ namespace GNS3sharp {
                 typesOfNodes.Add(
                     new Dictionary<string,object>(){
                         {"class", nodeType},
-                        {"label", nodeType.GetProperty("Label", BindingFlags.Static | BindingFlags.Public).GetValue(null).ToString()}
+                        {"label", nodeType.GetProperty("Label", BindingFlags.Static | BindingFlags.Public).GetValue(null)}
                     }
                 );
 

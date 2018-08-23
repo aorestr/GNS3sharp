@@ -273,7 +273,7 @@ namespace GNS3sharp {
         /// </summary>
         /// <param name="IP">IP where to send the ICMP packets to</param>
         /// <param name="additionalParameters">Additional parameters for the ping</param>
-        /// <returns>The result messages of the ping</returns>
+        /// <returns>The result messages of the ping as an array of strings</returns>
         /// <example>
         /// <code>
         /// foreach(string line in PC.Ping("192.168.30.5"))
@@ -299,7 +299,7 @@ namespace GNS3sharp {
         /// <summary>
         /// Check whether a ping went right or wrong
         /// </summary>
-        /// <param name="pingMessage">Result of a ping</param>
+        /// <param name="pingMessage">Result message of a ping</param>
         /// <returns>True if the ping went right, False otherwise</returns>
         /// <example>
         /// <code>

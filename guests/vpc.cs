@@ -4,6 +4,13 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 
 namespace GNS3sharp {
+
+    /// <summary>
+    /// Representation of a VPC type of node
+    /// <remarks>
+    /// Define methods that are only available for this appliance
+    /// </remarks>
+    /// </summary>
     public class VPC : Guest{
 
         private const string label = "VPC";
@@ -14,14 +21,33 @@ namespace GNS3sharp {
         /// <value>Label as a string</value>
         public static string Label { get => label; }
 
-        // Constructors
+        /// <summary>
+        /// Constructor by default. Every property is empty
+        /// </summary>
         internal VPC() : base() {}
+
+        /// <summary>
+        /// Constructor for any kind of <c>Node</c>. It must be called from a <c>GNS3sharp</c> object
+        /// </summary>
+        /// <param name="_consoleHost">IP of the machine where the node is hosted</param>
+        /// <param name="_port">Port of the machine where the node is hosted</param>
+        /// <param name="_name">Name of the node stablished in the project</param>
+        /// <param name="_id">ID the node has implicitly</param>
+        /// <param name="_ports">Array of dictionaries that contains information about every network interface</param>
         internal VPC(string _consoleHost, ushort _port, string _name, string _id,
             Dictionary<string,dynamic>[] _ports) : 
             base(_consoleHost, _port, _name, _id, _ports){}
+
+        /// <summary>
+        /// Constructor that replicates a guest from another node
+        /// </summary>
+        /// <param name="clone">Node you want to make the copy from</param>
         public VPC(Node clone) : base(clone){}
 
-        // Show arp table
+        /// <summary>
+        /// Show arp table
+        /// </summary>
+        /// <returns>Received message as an array of strings</returns>
         public string[] ShowArp(){
 
             // Reception variable as a string
@@ -34,7 +60,11 @@ namespace GNS3sharp {
 
         }
 
-        // Clear certain parameters
+        /// <summary>
+        /// Clear a certain type of parameters
+        /// </summary>
+        /// <param name="parameter">Valid parameters: "ip","ipv6","arp","neighbor","hist"</param>
+        /// <returns>Received message as an array of strings</returns>
         public string[] Clear(string parameter){
 
             // Reception variable as a string
@@ -55,7 +85,10 @@ namespace GNS3sharp {
 
         }
 
-        // Use DHCP for assigning the IP
+        /// <summary>
+        /// Use DHCP as the method for assigning the IP in a network
+        /// </summary>
+        /// <returns>Received message as an array of strings</returns>
         public string[] DHCP(){
 
             // Reception variable as a string
@@ -68,7 +101,10 @@ namespace GNS3sharp {
 
         }
 
-        // Show current config
+        /// <summary>
+        /// Show current config
+        /// </summary>
+        /// <returns>Received message as an array of strings</returns>
         public string[] ShowConf(){
 
             // Reception variable as a string
@@ -81,9 +117,16 @@ namespace GNS3sharp {
 
         }
 
-        // Set an IP for the VPC
+        /// <summary>
+        /// Set an IP for an interface of the device
+        /// </summary>
+        /// <param name="IP">IPv4 you plan to set</param>
+        /// <param name="netmask">Netmask of the address. By default "255.255.255.0"</param>
+        /// <param name="adapterNumber">Interface number (eth#). By default is 0</param>
+        /// <param name="gateway">Default gateway packets will use</param>
+        /// <returns>Received message as an array of strings</returns>
         public override string[] SetIP(
-            string IP, string netmask = "255.255.255.0", ushort adapter_number = 0, string gateway = null
+            string IP, string netmask = "255.255.255.0", ushort adapterNumber = 0, string gateway = null
             ){
 
             // Reception variable as a string
@@ -110,6 +153,14 @@ namespace GNS3sharp {
 
         }
 
+        /// <summary>
+        /// Send Ping to a certain IP
+        /// </summary>
+        /// <param name="IP">IP where ICMP packets will be sent</param>
+        /// <param name="count">Number of retries. By default 5</param>
+        /// <param name="msBetweenPackets">Miliseconds between each package</param>
+        /// <param name="protocol">Sending protocol. Valid values: "ICMP", "TCP", "UDP". By default "ICMP"</param>
+        /// <returns>Received message as an array of strings</returns>
         public string[] Ping(string IP, ushort count=5, uint msBetweenPackets = 500, string protocol="ICMP"){
             ushort protocolNum = 1;
             if (protocol.ToUpper().Equals("TCP"))
@@ -120,8 +171,17 @@ namespace GNS3sharp {
             return Ping(IP, $"-c {count.ToString()} -P {protocolNum.ToString()} -i {msBetweenPackets}");
         }
 
-        // Check whether a ping went right or wrong. The results are showed different from
-        // the average linux based node
+        /// <summary>
+        /// Check whether a ping went right or wrong
+        /// </summary>
+        /// <param name="pingMessage">Result message of a ping</param>
+        /// <returns>True if the ping went right, False otherwise</returns>
+        /// <example>
+        /// <code>
+        /// if (PC.PingResult(PC.Ping("192.168.30.5")))
+        ///     Console.WriteLine("The ping went ok");
+        /// </code>
+        /// </example>
         public override bool PingResult(string[] pingMessage){
             // We assume the result will be negative
             bool result = false;
@@ -141,7 +201,11 @@ namespace GNS3sharp {
             return result;
         }
 
-        // Show the route to a certain IP
+        /// <summary>
+        /// Show the route to a certain IP
+        /// </summary>
+        /// <param name="IP">IP</param>
+        /// <returns>Received message as an array of strings</returns>
         public string[] Trace(string IP){
 
             // Reception variable as a string

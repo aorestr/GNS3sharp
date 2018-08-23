@@ -2,7 +2,6 @@ using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -328,7 +327,7 @@ namespace GNS3sharp {
                 return ports.ToArray();
             }
 
-            ConstructorInfo ctor; int i = 0;
+            System.Reflection.ConstructorInfo ctor; int i = 0;
             try{
                 foreach(Dictionary<string, object> node in JSON){
                     try{
@@ -336,7 +335,7 @@ namespace GNS3sharp {
 
                         // Get the main constructor of the node type
                         ctor = Aux.NodeType(node["name"].ToString()).GetConstructors(
-                            BindingFlags.NonPublic | BindingFlags.Instance
+                            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance
                         ).Last();
 
                         // Invoke the previous constructor and create the instance through it
