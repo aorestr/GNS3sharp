@@ -21,7 +21,7 @@ namespace GNS3sharp {
         /// <param name="projectName">Name of the GNS3 project which ID you plan to get</param>
         /// <param name="host">IP where the GNS3 server is hosted. "localhost" by default</param>
         /// <param name="port">Port where the server is hosted. 3080 by default</param>
-        /// <returns></returns>
+        /// <returns>The ID of the project in case it's found. Null otherwise</returns>
         public static string GetProjectIDByName(string projectName, string host = "localhost", ushort port = 3080) {
             string id = null;
             List<Dictionary<string,object>> projects = null;
